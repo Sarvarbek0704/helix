@@ -1,17 +1,145 @@
 "use client";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { useGetMyRecordsQuery } from "@/store/api/medicalApi";
-import { FileText, ChevronRight } from "lucide-react";
+import { useGetMyRecordsQuery, useCreateMutation } from "@/store/api/medicalApi";
+import { useGetAllPatientsQuery } from "@/store/api/patientsApi";
+import { FileText, ChevronRight, Plus, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import type { RootState } from "@/store";
+
+const RECORD_TYPES = ["visit_note", "diagnosis", "procedure", "surgery", "vaccination", "allergy", "chronic_condition"] as const;
 
 export default function MedicalRecordsPage() {
   const user = useSelector((s: RootState) => s.auth.user);
+  const role = user?.role;
+  const isPatient = role === "patient";
+
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useGetMyRecordsQuery({ page, limit: 15 });
+  const { data, isLoading } = useGetMyRecordsQuery({ page, limit: 15 }, { skip: !isPatient });
   const records = data?.data || [];
+
+  const { data: patientsData } = useGetAllPatientsQuery({ limit: 200 }, { skip: isPatient });
+  const patients = patientsData?.data || [];
+
+  const [create, { isLoading: creating }] = useCreateMutation();
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    patientId: "", type: "visit_note" as typeof RECORD_TYPES[number],
+    title: "", description: "", icdCode: "", recordDate: "",
+  });
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await create({
+        patientId: form.patientId,
+        type: form.type,
+        title: form.title,
+        description: form.description || undefined,
+        icdCode: form.icdCode || undefined,
+        recordDate: form.recordDate || undefined,
+      }).unwrap();
+      toast.success("Medical record created");
+      setShowForm(false);
+      setForm({ patientId: "", type: "visit_note", title: "", description: "", icdCode: "", recordDate: "" });
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to create record");
+    }
+  }
+
+  if (!isPatient) {
+    return (
+      <div className="space-y-5 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">Create and manage medical records</p>
+          <button onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg transition">
+            <Plus className="w-4 h-4" /> New Record
+          </button>
+        </div>
+
+        <div className="bg-card rounded-xl border shadow-card p-8 text-center">
+          <FileText className="w-16 h-16 text-helix-200 mx-auto mb-4" />
+          <p className="font-semibold mb-1">Medical Records</p>
+          <p className="text-sm text-muted-foreground mb-1">Create medical records for patients, or view a patient&apos;s full history from their profile.</p>
+          <div className="flex gap-3 justify-center mt-4">
+            <button onClick={() => setShowForm(true)}
+              className="px-4 py-2 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg transition">
+              Create Record
+            </button>
+            <Link href="/patients" className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted transition">
+              Browse Patients
+            </Link>
+          </div>
+        </div>
+
+        {showForm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-card rounded-xl border shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-card">
+                <h3 className="font-semibold">New Medical Record</h3>
+                <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground transition">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <form onSubmit={handleCreate} className="p-5 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Patient *</label>
+                  <select required value={form.patientId} onChange={(e) => setForm({ ...form, patientId: e.target.value })}
+                    className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500">
+                    <option value="">Select patient...</option>
+                    {patients.map((p: any) => (
+                      <option key={p.id} value={p.userId}>{p.user?.firstName} {p.user?.lastName} — {p.patientNumber}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Record Type *</label>
+                    <select required value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as any })}
+                      className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500">
+                      {RECORD_TYPES.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Record Date</label>
+                    <input type="date" value={form.recordDate} onChange={(e) => setForm({ ...form, recordDate: e.target.value })}
+                      className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Title *</label>
+                  <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Annual Physical Examination"
+                    className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">ICD Code</label>
+                  <input value={form.icdCode} onChange={(e) => setForm({ ...form, icdCode: e.target.value })}
+                    placeholder="e.g. I10 (optional)"
+                    className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Description</label>
+                  <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    rows={4} placeholder="Detailed notes, findings, treatment plan..."
+                    className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500 resize-none" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 h-10 rounded-lg border text-sm font-medium hover:bg-muted transition">Cancel</button>
+                  <button type="submit" disabled={creating} className="flex-1 h-10 rounded-lg bg-helix-600 text-white text-sm font-semibold hover:bg-helix-700 disabled:opacity-60 flex items-center justify-center gap-2 transition">
+                    {creating && <Loader2 className="w-4 h-4 animate-spin" />} Save Record
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 animate-fade-in">

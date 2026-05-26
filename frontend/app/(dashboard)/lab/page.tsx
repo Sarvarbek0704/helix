@@ -1,6 +1,7 @@
 "use client";
 import { useSelector } from "react-redux";
-import { useGetMyOrdersQuery, useGetAllOrdersQuery, useUpdateOrderStatusMutation, useUploadResultsMutation } from "@/store/api/labApi";
+import { useGetMyOrdersQuery, useGetAllOrdersQuery, useUpdateOrderStatusMutation, useUploadResultsMutation, useCreateOrderMutation } from "@/store/api/labApi";
+import { useGetAllPatientsQuery } from "@/store/api/patientsApi";
 import { FlaskConical, ChevronDown, Plus, X, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -19,15 +20,40 @@ const STATUS_LABELS: Record<string, string> = {
 export default function LabPage() {
   const user = useSelector((s: RootState) => s.auth.user);
   const role = user?.role;
+  const isDoctor = role === "doctor";
   const [tab, setTab] = useState<"orders" | "results">("orders");
   const [uploadOrderId, setUploadOrderId] = useState<string | null>(null);
   const [results, setResults] = useState([{ testName: "", value: "", unit: "", referenceRange: "", flag: "" }]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [orderForm, setOrderForm] = useState({ patientId: "", priority: "routine", clinicalNotes: "", testsInput: "" });
 
   const myOrdersQuery = useGetMyOrdersQuery({ limit: 50 }, { skip: role !== "patient" });
   const allOrdersQuery = useGetAllOrdersQuery({ limit: 100 }, { skip: role === "patient" });
+  const { data: patientsData } = useGetAllPatientsQuery({ limit: 200 }, { skip: !isDoctor });
+  const patients = patientsData?.data || [];
+  const [createOrder, { isLoading: creatingOrder }] = useCreateOrderMutation();
 
   const [updateStatus] = useUpdateOrderStatusMutation();
   const [uploadResults, { isLoading: uploading }] = useUploadResultsMutation();
+
+  async function handleCreateOrder(e: React.FormEvent) {
+    e.preventDefault();
+    const tests = orderForm.testsInput.split(",").map((t) => t.trim()).filter(Boolean);
+    if (!tests.length) { toast.error("Add at least one test"); return; }
+    try {
+      await createOrder({
+        patientId: orderForm.patientId,
+        tests,
+        priority: orderForm.priority as any,
+        clinicalNotes: orderForm.clinicalNotes || undefined,
+      }).unwrap();
+      toast.success("Lab order created");
+      setShowCreate(false);
+      setOrderForm({ patientId: "", priority: "routine", clinicalNotes: "", testsInput: "" });
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to create lab order");
+    }
+  }
 
   const orders: any[] = role === "patient" ? (myOrdersQuery.data?.data || []) : (allOrdersQuery.data?.data || []);
   const isLoading = role === "patient" ? myOrdersQuery.isLoading : allOrdersQuery.isLoading;
@@ -71,6 +97,15 @@ export default function LabPage() {
 
   return (
     <div className="space-y-5 animate-fade-in">
+      {isDoctor && (
+        <div className="flex justify-end">
+          <button onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg transition">
+            <Plus className="w-4 h-4" /> New Lab Order
+          </button>
+        </div>
+      )}
+
       {role === "patient" && (
         <div className="flex gap-1.5">
           {(["orders", "results"] as const).map((t) => (
@@ -191,6 +226,60 @@ export default function LabPage() {
             ))}
           </div>
         )
+      )}
+
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl border shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="font-semibold">New Lab Order</h3>
+              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateOrder} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Patient *</label>
+                <select required value={orderForm.patientId} onChange={(e) => setOrderForm({ ...orderForm, patientId: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500">
+                  <option value="">Select patient...</option>
+                  {patients.map((p: any) => (
+                    <option key={p.id} value={p.userId}>{p.user?.firstName} {p.user?.lastName} — {p.patientNumber}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Tests * (comma-separated)</label>
+                <input value={orderForm.testsInput} onChange={(e) => setOrderForm({ ...orderForm, testsInput: e.target.value })}
+                  placeholder="Complete Blood Count, HbA1c, Lipid Panel"
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Priority</label>
+                <select value={orderForm.priority} onChange={(e) => setOrderForm({ ...orderForm, priority: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500">
+                  <option value="routine">Routine</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="stat">STAT</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Clinical Notes</label>
+                <textarea value={orderForm.clinicalNotes} onChange={(e) => setOrderForm({ ...orderForm, clinicalNotes: e.target.value })}
+                  rows={2} placeholder="Clinical context or instructions..."
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500 resize-none" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCreate(false)}
+                  className="flex-1 h-10 rounded-lg border text-sm font-medium hover:bg-muted transition">Cancel</button>
+                <button type="submit" disabled={creatingOrder}
+                  className="flex-1 h-10 rounded-lg bg-helix-600 text-white text-sm font-semibold hover:bg-helix-700 disabled:opacity-60 transition">
+                  {creatingOrder ? "Creating..." : "Create Order"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {uploadOrderId && (

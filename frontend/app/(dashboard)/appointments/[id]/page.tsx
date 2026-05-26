@@ -1,8 +1,8 @@
 "use client";
-import { use } from "react";
+import { use, useState } from "react";
 import { useSelector } from "react-redux";
 import { useGetByIdQuery, useConfirmMutation, useStartMutation, useCompleteMutation, useCancelMutation } from "@/store/api/appointmentsApi";
-import { ArrowLeft, Calendar, Clock, User, Loader2, CheckCircle, PlayCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Loader2, CheckCircle, PlayCircle, XCircle, X } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -19,15 +19,40 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
   const [complete, { isLoading: completing }] = useCompleteMutation();
   const [cancel] = useCancelMutation();
 
-  async function handleAction(action: "confirm" | "start" | "complete" | "cancel") {
+  const [showComplete, setShowComplete] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
+  const [completeForm, setCompleteForm] = useState({ diagnosis: "", doctorNotes: "" });
+  const [cancelReason, setCancelReason] = useState("");
+
+  async function handleAction(action: "confirm" | "start") {
     try {
       if (action === "confirm") await confirm(id).unwrap();
       else if (action === "start") await start(id).unwrap();
-      else if (action === "complete") await complete({ id }).unwrap();
-      else await cancel({ id, reason: "Cancelled by staff" }).unwrap();
       toast.success(`Appointment ${action}ed`);
     } catch {
       toast.error(`Failed to ${action} appointment`);
+    }
+  }
+
+  async function handleComplete(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await complete({ id, diagnosis: completeForm.diagnosis || undefined, notes: completeForm.doctorNotes || undefined }).unwrap();
+      toast.success("Appointment completed");
+      setShowComplete(false);
+    } catch {
+      toast.error("Failed to complete appointment");
+    }
+  }
+
+  async function handleCancel(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await cancel({ id, reason: cancelReason || "Cancelled" }).unwrap();
+      toast.success("Appointment cancelled");
+      setShowCancel(false);
+    } catch {
+      toast.error("Failed to cancel appointment");
     }
   }
 
@@ -101,14 +126,13 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
               </button>
             )}
             {appt.status === "in_progress" && (
-              <button onClick={() => handleAction("complete")} disabled={completing}
-                className="flex items-center gap-2 px-4 h-9 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-60">
-                {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Complete
+              <button onClick={() => setShowComplete(true)}
+                className="flex items-center gap-2 px-4 h-9 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition">
+                <CheckCircle className="w-4 h-4" /> Complete
               </button>
             )}
             {!["completed", "cancelled"].includes(appt.status) && (
-              <button onClick={() => handleAction("cancel")}
+              <button onClick={() => setShowCancel(true)}
                 className="flex items-center gap-2 px-4 h-9 border border-destructive/50 text-destructive text-sm font-medium rounded-lg hover:bg-destructive/10 transition">
                 <XCircle className="w-4 h-4" /> Cancel
               </button>
@@ -116,6 +140,70 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
           </div>
         )}
       </div>
+
+      {showComplete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl border shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="font-semibold">Complete Appointment</h3>
+              <button onClick={() => setShowComplete(false)} className="text-muted-foreground hover:text-foreground transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleComplete} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Diagnosis</label>
+                <input value={completeForm.diagnosis} onChange={(e) => setCompleteForm({ ...completeForm, diagnosis: e.target.value })}
+                  placeholder="e.g. Hypertension, Stage 1"
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Doctor Notes</label>
+                <textarea value={completeForm.doctorNotes} onChange={(e) => setCompleteForm({ ...completeForm, doctorNotes: e.target.value })}
+                  rows={3} placeholder="Treatment notes, follow-up instructions..."
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500 resize-none" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowComplete(false)}
+                  className="flex-1 h-10 rounded-lg border text-sm font-medium hover:bg-muted transition">Cancel</button>
+                <button type="submit" disabled={completing}
+                  className="flex-1 h-10 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 disabled:opacity-60 flex items-center justify-center gap-2 transition">
+                  {completing && <Loader2 className="w-4 h-4 animate-spin" />} Mark Complete
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCancel && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl border shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="font-semibold">Cancel Appointment</h3>
+              <button onClick={() => setShowCancel(false)} className="text-muted-foreground hover:text-foreground transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCancel} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Reason</label>
+                <textarea value={cancelReason} onChange={(e) => setCancelReason(e.target.value)}
+                  rows={2} placeholder="Reason for cancellation..."
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500 resize-none" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCancel(false)}
+                  className="flex-1 h-10 rounded-lg border text-sm font-medium hover:bg-muted transition">Back</button>
+                <button type="submit"
+                  className="flex-1 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition">
+                  Cancel Appointment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
