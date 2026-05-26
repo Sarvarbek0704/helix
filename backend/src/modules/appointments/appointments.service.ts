@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Appointment, AppointmentStatus, AppointmentType } from '../../database/entities/appointment.entity';
 import { DoctorProfile } from '../../database/entities/doctor-profile.entity';
 import { User } from '../../database/entities/user.entity';
 import { Notification, NotificationType } from '../../database/entities/notification.entity';
 import { CreateAppointmentDto, UpdateAppointmentDto, DoctorUpdateDto, CancelDto } from './dto/appointment.dto';
+import { MailerService } from '../mailer/mailer.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -14,6 +15,7 @@ export class AppointmentsService {
     @InjectRepository(DoctorProfile) private doctorRepo: Repository<DoctorProfile>,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Notification) private notifRepo: Repository<Notification>,
+    private mailerService: MailerService,
   ) {}
 
   private generateAppointmentNumber(): string {
@@ -25,7 +27,12 @@ export class AppointmentsService {
     if (!doctor) throw new NotFoundException('Doctor not found');
 
     const conflict = await this.apptRepo.findOne({
-      where: { doctorId: dto.doctorId, appointmentDate: dto.appointmentDate, appointmentTime: dto.appointmentTime, status: AppointmentStatus.CONFIRMED },
+      where: {
+        doctorId: dto.doctorId,
+        appointmentDate: dto.appointmentDate,
+        appointmentTime: dto.appointmentTime,
+        status: In([AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS]),
+      },
     });
     if (conflict) throw new BadRequestException('This time slot is already booked');
 
@@ -99,15 +106,25 @@ export class AppointmentsService {
 
   async confirm(id: string, doctorUserId: string) {
     const appt = await this.findOne(id);
-    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId } });
+    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId }, relations: ['user'] });
     if (!doctor || appt.doctorId !== doctor.id) throw new ForbiddenException();
     await this.apptRepo.update(id, { status: AppointmentStatus.CONFIRMED });
+    const patient = await this.userRepo.findOne({ where: { id: appt.patientId } });
     await this.notifRepo.save(this.notifRepo.create({
       userId: appt.patientId,
       type: NotificationType.APPOINTMENT_CONFIRMED,
       title: 'Appointment Confirmed',
       message: `Your appointment on ${appt.appointmentDate} at ${appt.appointmentTime} has been confirmed.`,
     }));
+    if (patient) {
+      const doctorName = doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'your doctor';
+      this.mailerService.sendAppointmentConfirmation(patient.email, patient.firstName, {
+        date: String(appt.appointmentDate),
+        time: String(appt.appointmentTime),
+        doctor: doctorName,
+        type: appt.type,
+      }).catch(() => {});
+    }
     return this.findOne(id);
   }
 

@@ -23,7 +23,7 @@ export class PatientProfile {
   @Column({ nullable: true }) emergencyContactRelation: string;
   @Column({ nullable: true }) insurancePlanId: string;
   @Column({ nullable: true }) insuranceMemberId: string;
-  @Column({ nullable: true }) patientNumber: string;
+  @Column({ nullable: true, unique: true }) patientNumber: string;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

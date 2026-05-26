@@ -45,7 +45,7 @@ export class MailerService {
   }
 
   async sendPasswordResetEmail(to: string, name: string, token: string) {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl = `${this.config.get('app.frontendUrl') || process.env.FRONTEND_URL}/reset-password?token=${token}`;
     await this.send(to, 'Reset Your Helix Password', `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;">
         <div style="text-align:center;margin-bottom:24px;">

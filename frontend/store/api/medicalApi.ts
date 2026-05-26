@@ -6,7 +6,16 @@ export const medicalApi = createApi({
   baseQuery: bq,
   tagTypes: ["MedicalRecords"],
   endpoints: (b) => ({
-    create: b.mutation<any, { patientId: string; title: string; description: string; diagnosis?: string; appointmentId?: string }>({
+    create: b.mutation<any, {
+      patientId: string;
+      type: "visit_note" | "diagnosis" | "procedure" | "surgery" | "vaccination" | "allergy" | "chronic_condition";
+      title: string;
+      description?: string;
+      icdCode?: string;
+      appointmentId?: string;
+      attachments?: string[];
+      recordDate?: string;
+    }>({
       query: (body) => ({ url: "/medical-records", method: "POST", body }),
       invalidatesTags: ["MedicalRecords"],
     }),

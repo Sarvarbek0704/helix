@@ -59,7 +59,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <h3 className="font-semibold flex items-center gap-2 mb-4"><Activity className="w-4 h-4 text-helix-600" /> Latest Vitals</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "Blood Pressure", value: latest.bloodPressure, unit: "mmHg" },
+              { label: "Blood Pressure", value: latest.systolicBP && latest.diastolicBP ? `${latest.systolicBP}/${latest.diastolicBP}` : null, unit: "mmHg" },
               { label: "Heart Rate", value: latest.heartRate, unit: "bpm" },
               { label: "Temperature", value: latest.temperature, unit: "°C" },
               { label: "O₂ Saturation", value: latest.oxygenSaturation, unit: "%" },

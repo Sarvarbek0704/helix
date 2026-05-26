@@ -6,7 +6,15 @@ export const appointmentsApi = createApi({
   baseQuery: bq,
   tagTypes: ["Appointments"],
   endpoints: (b) => ({
-    create: b.mutation<any, { doctorId: string; scheduledAt: string; reason: string; notes?: string }>({
+    create: b.mutation<any, {
+      doctorId: string;
+      appointmentDate: string;
+      appointmentTime: string;
+      type?: "in_person" | "telemedicine" | "follow_up" | "emergency";
+      reason?: string;
+      symptoms?: string;
+      durationMinutes?: number;
+    }>({
       query: (body) => ({ url: "/appointments", method: "POST", body }),
       invalidatesTags: ["Appointments"],
     }),

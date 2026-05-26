@@ -6,9 +6,10 @@ import { Appointment } from '../../database/entities/appointment.entity';
 import { DoctorProfile } from '../../database/entities/doctor-profile.entity';
 import { User } from '../../database/entities/user.entity';
 import { Notification } from '../../database/entities/notification.entity';
+import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, DoctorProfile, User, Notification])],
+  imports: [TypeOrmModule.forFeature([Appointment, DoctorProfile, User, Notification]), MailerModule],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
   exports: [AppointmentsService],

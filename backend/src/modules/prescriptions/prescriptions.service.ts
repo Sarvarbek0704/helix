@@ -30,9 +30,11 @@ export class PrescriptionsService {
       items: dto.items.map((i) => this.itemRepo.create(i)),
     });
     const saved = await this.prescRepo.save(presc);
+    const fullDoctor = await this.doctorRepo.findOne({ where: { id: doctor.id }, relations: ['user'] });
+    const doctorName = fullDoctor?.user ? `Dr. ${fullDoctor.user.firstName} ${fullDoctor.user.lastName}` : 'Your doctor';
     await this.notifRepo.save(this.notifRepo.create({
       userId: dto.patientId, type: NotificationType.PRESCRIPTION_READY,
-      title: 'New Prescription', message: `Dr. has written you a new prescription.`,
+      title: 'New Prescription', message: `${doctorName} has written you a new prescription.`,
     }));
     return this.findOne(saved.id);
   }

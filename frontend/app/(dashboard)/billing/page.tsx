@@ -61,7 +61,7 @@ export default function BillingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-sm">Bill #{b.id?.slice(-6).toUpperCase()}</p>
-                  {role === "admin" && <p className="text-xs text-muted-foreground">{b.patientName}</p>}
+                  {role === "admin" && <p className="text-xs text-muted-foreground">{b.patient?.firstName} {b.patient?.lastName}</p>}
                   <p className="text-xs text-muted-foreground">{b.createdAt ? format(new Date(b.createdAt), "MMM d, yyyy") : "—"}</p>
                 </div>
                 <div className="text-right">

@@ -74,18 +74,24 @@ export default function AppointmentsPage() {
           {appointments.map((a) => (
             <div key={a.id} className="bg-card rounded-xl border shadow-card p-4 flex items-center gap-4 hover:shadow-card-hover transition">
               <div className="w-12 text-center shrink-0">
-                <div className="text-xs font-semibold text-helix-600 uppercase">{format(new Date(a.scheduledAt), "MMM")}</div>
-                <div className="text-2xl font-bold leading-tight">{format(new Date(a.scheduledAt), "d")}</div>
+                <div className="text-xs font-semibold text-helix-600 uppercase">
+                  {a.appointmentDate ? format(new Date(a.appointmentDate), "MMM") : "—"}
+                </div>
+                <div className="text-2xl font-bold leading-tight">
+                  {a.appointmentDate ? format(new Date(a.appointmentDate), "d") : "—"}
+                </div>
               </div>
               <div className="w-px h-10 bg-border" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate">
-                  {role === "patient" ? `Dr. ${a.doctorName || "Doctor"}` : a.patientName || "Patient"}
+                  {role === "patient"
+                    ? `Dr. ${a.doctor?.user?.firstName ?? ""} ${a.doctor?.user?.lastName ?? ""}`.trim() || "Doctor"
+                    : `${a.patient?.firstName ?? ""} ${a.patient?.lastName ?? ""}`.trim() || "Patient"}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">{a.reason}</p>
                 <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
-                  {format(new Date(a.scheduledAt), "h:mm a")}
+                  {a.appointmentTime || "—"}
                 </div>
               </div>
               <StatusBadge status={a.status} />

@@ -52,7 +52,11 @@ export class SchedulesService {
     if (!schedule) return { date, slots: [] };
 
     const bookedAppointments = await this.appointmentRepo.find({
-      where: { doctorId: doctorProfileId, appointmentDate: date, status: 'confirmed' as any },
+      where: [
+        { doctorId: doctorProfileId, appointmentDate: date, status: 'pending' as any },
+        { doctorId: doctorProfileId, appointmentDate: date, status: 'confirmed' as any },
+        { doctorId: doctorProfileId, appointmentDate: date, status: 'in_progress' as any },
+      ],
       select: ['appointmentTime'],
     });
     const bookedTimes = new Set(bookedAppointments.map((a) => a.appointmentTime));

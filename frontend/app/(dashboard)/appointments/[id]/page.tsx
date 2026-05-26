@@ -51,9 +51,9 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
 
         <div className="grid grid-cols-2 gap-4">
           {[
-            { icon: Calendar, label: "Date", value: format(new Date(appt.scheduledAt), "EEEE, MMMM d, yyyy") },
-            { icon: Clock, label: "Time", value: format(new Date(appt.scheduledAt), "h:mm a") },
-            { icon: User, label: role === "patient" ? "Doctor" : "Patient", value: role === "patient" ? `Dr. ${appt.doctorName}` : appt.patientName },
+            { icon: Calendar, label: "Date", value: appt.appointmentDate ? format(new Date(appt.appointmentDate), "EEEE, MMMM d, yyyy") : "—" },
+            { icon: Clock, label: "Time", value: appt.appointmentTime || "—" },
+            { icon: User, label: role === "patient" ? "Doctor" : "Patient", value: role === "patient" ? `Dr. ${appt.doctor?.user?.firstName ?? ""} ${appt.doctor?.user?.lastName ?? ""}`.trim() : `${appt.patient?.firstName ?? ""} ${appt.patient?.lastName ?? ""}`.trim() },
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
               <Icon className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />

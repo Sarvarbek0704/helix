@@ -57,8 +57,14 @@ export class AuthService {
     await this.userRepo.update(user.id, { status: UserStatus.ACTIVE, isEmailVerified: true, otpCode: null, otpExpires: null });
 
     if (user.role === UserRole.PATIENT) {
-      const patientCount = await this.patientRepo.count();
-      await this.patientRepo.save(this.patientRepo.create({ userId: user.id, patientNumber: `P${String(patientCount + 1).padStart(6, '0')}` }));
+      const result = await this.patientRepo
+        .createQueryBuilder('p')
+        .select("MAX(CAST(SUBSTRING(p.patientNumber, 2) AS INTEGER))", 'maxNum')
+        .getRawOne();
+      const nextNum = (result?.maxNum ?? 0) + 1;
+      await this.patientRepo.save(
+        this.patientRepo.create({ userId: user.id, patientNumber: `P${String(nextNum).padStart(6, '0')}` }),
+      );
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);

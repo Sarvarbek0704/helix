@@ -27,7 +27,7 @@ export default function PrescriptionsPage() {
                 <div>
                   <p className="font-semibold text-sm">Prescription #{p.id?.slice(-6).toUpperCase()}</p>
                   <p className="text-xs text-muted-foreground">
-                    By Dr. {p.doctor?.firstName} {p.doctor?.lastName} · {format(new Date(p.createdAt), "MMM d, yyyy")}
+                    By Dr. {p.doctor?.user?.firstName} {p.doctor?.user?.lastName} · {format(new Date(p.createdAt), "MMM d, yyyy")}
                   </p>
                 </div>
                 <StatusBadge status={p.status} />

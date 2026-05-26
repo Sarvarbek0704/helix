@@ -1,12 +1,27 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery as bq } from "./baseQuery";
 
+interface LabResult {
+  testName: string;
+  value: string;
+  unit: string;
+  referenceRange?: string;
+  flag?: string;
+  notes?: string;
+}
+
 export const labApi = createApi({
   reducerPath: "labApi",
   baseQuery: bq,
-  tagTypes: ["LabOrders", "LabResults"],
+  tagTypes: ["LabOrders"],
   endpoints: (b) => ({
-    createOrder: b.mutation<any, { patientId: string; tests: string[]; notes?: string; appointmentId?: string }>({
+    createOrder: b.mutation<any, {
+      patientId: string;
+      appointmentId?: string;
+      tests: string[];
+      priority?: "routine" | "urgent" | "stat";
+      clinicalNotes?: string;
+    }>({
       query: (body) => ({ url: "/lab/orders", method: "POST", body }),
       invalidatesTags: ["LabOrders"],
     }),
@@ -14,24 +29,21 @@ export const labApi = createApi({
       query: (params) => ({ url: "/lab/orders/my", params }),
       providesTags: ["LabOrders"],
     }),
-    getPatientOrders: b.query<any, { id: string; page?: number; limit?: number }>({
-      query: ({ id, ...params }) => ({ url: `/lab/orders/patient/${id}`, params }),
-      providesTags: ["LabOrders"],
-    }),
-    getAllOrders: b.query<any, { page?: number; limit?: number; status?: string }>({
+    getAllOrders: b.query<any, { page?: number; limit?: number; status?: string; patientId?: string }>({
       query: (params) => ({ url: "/lab/orders", params }),
       providesTags: ["LabOrders"],
     }),
     getOrderById: b.query<any, string>({
       query: (id) => `/lab/orders/${id}`,
+      providesTags: (_r, _e, id) => [{ type: "LabOrders", id }],
     }),
-    uploadResult: b.mutation<any, { orderId: string; results: any[]; notes?: string }>({
-      query: ({ orderId, ...body }) => ({ url: `/lab/orders/${orderId}/result`, method: "POST", body }),
-      invalidatesTags: ["LabOrders", "LabResults"],
+    updateOrderStatus: b.mutation<any, { id: string; status: string }>({
+      query: ({ id, ...body }) => ({ url: `/lab/orders/${id}/status`, method: "PATCH", body }),
+      invalidatesTags: ["LabOrders"],
     }),
-    getMyResults: b.query<any, { page?: number; limit?: number }>({
-      query: (params) => ({ url: "/lab/results/my", params }),
-      providesTags: ["LabResults"],
+    uploadResults: b.mutation<any, { orderId: string; results: LabResult[] }>({
+      query: ({ orderId, ...body }) => ({ url: `/lab/orders/${orderId}/results`, method: "POST", body }),
+      invalidatesTags: ["LabOrders"],
     }),
   }),
 });
@@ -39,9 +51,8 @@ export const labApi = createApi({
 export const {
   useCreateOrderMutation,
   useGetMyOrdersQuery,
-  useGetPatientOrdersQuery,
   useGetAllOrdersQuery,
   useGetOrderByIdQuery,
-  useUploadResultMutation,
-  useGetMyResultsQuery,
+  useUpdateOrderStatusMutation,
+  useUploadResultsMutation,
 } = labApi;

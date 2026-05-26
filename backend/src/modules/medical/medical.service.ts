@@ -12,10 +12,14 @@ export class MedicalService {
     @InjectRepository(DoctorProfile) private doctorRepo: Repository<DoctorProfile>,
   ) {}
 
-  async create(doctorUserId: string, dto: CreateMedicalRecordDto) {
-    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId } });
-    if (!doctor) throw new ForbiddenException('Doctor profile not found');
-    const record = this.recordRepo.create({ ...dto, doctorId: doctor.id, recordDate: dto.recordDate ? new Date(dto.recordDate) : new Date() });
+  async create(userId: string, dto: CreateMedicalRecordDto) {
+    const doctor = await this.doctorRepo.findOne({ where: { userId } });
+    // Nurses won't have a doctor profile; doctorId stays null in that case
+    const record = this.recordRepo.create({
+      ...dto,
+      doctorId: doctor?.id ?? null,
+      recordDate: dto.recordDate ? new Date(dto.recordDate) : new Date(),
+    });
     return this.recordRepo.save(record);
   }
 

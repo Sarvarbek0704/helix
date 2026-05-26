@@ -50,13 +50,13 @@ export function PatientDashboard() {
               {appts.data.map((a: any) => (
                 <div key={a.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <div className="w-10 h-10 bg-helix-100 rounded-lg flex flex-col items-center justify-center text-helix-700 shrink-0">
-                    <span className="text-xs font-bold">{format(new Date(a.scheduledAt), "MMM")}</span>
-                    <span className="text-base font-bold leading-none">{format(new Date(a.scheduledAt), "d")}</span>
+                    <span className="text-xs font-bold">{a.appointmentDate ? format(new Date(a.appointmentDate), "MMM") : "—"}</span>
+                    <span className="text-base font-bold leading-none">{a.appointmentDate ? format(new Date(a.appointmentDate), "d") : "—"}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">Dr. {a.doctorName || "Doctor"}</p>
+                    <p className="text-sm font-medium truncate">Dr. {a.doctor?.user?.firstName ?? ""} {a.doctor?.user?.lastName ?? ""}</p>
                     <p className="text-xs text-muted-foreground truncate">{a.reason}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(a.scheduledAt), "h:mm a")}</p>
+                    <p className="text-xs text-muted-foreground">{a.appointmentTime || "—"}</p>
                   </div>
                 </div>
               ))}
@@ -78,7 +78,7 @@ export function PatientDashboard() {
           {vitals ? (
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Blood Pressure", value: vitals.bloodPressure || "—", unit: "mmHg" },
+                { label: "Blood Pressure", value: vitals.systolicBP && vitals.diastolicBP ? `${vitals.systolicBP}/${vitals.diastolicBP}` : "—", unit: "mmHg" },
                 { label: "Heart Rate", value: vitals.heartRate || "—", unit: "bpm" },
                 { label: "Temperature", value: vitals.temperature || "—", unit: "°C" },
                 { label: "O₂ Saturation", value: vitals.oxygenSaturation || "—", unit: "%" },
@@ -103,7 +103,7 @@ export function PatientDashboard() {
           { label: "Total Appointments", value: dash?.totalAppointments, icon: Calendar },
           { label: "Medical Records", value: dash?.totalRecords, icon: FileText },
           { label: "Prescriptions", value: dash?.totalPrescriptions, icon: Pill },
-          { label: "Pending Bills", value: dash?.pendingBills, icon: CreditCard },
+          { label: "Pending Bills", value: dash?.pendingBills ?? dash?.unpaidBills, icon: CreditCard },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card rounded-xl border shadow-card p-4 flex items-center gap-3">
             <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shrink-0">

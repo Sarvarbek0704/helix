@@ -462,7 +462,8 @@ MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=your_email@gmail.com
 MAIL_PASS=your_app_password
-MAIL_FROM="Helix Health <your_email@gmail.com>"
+MAIL_FROM_NAME="Helix Health"
+MAIL_FROM_EMAIL=your_email@gmail.com
 ```
 
 ---
@@ -1008,7 +1009,9 @@ helix/
     │       ├── prescriptionsApi.ts
     │       ├── labApi.ts
     │       ├── departmentsApi.ts
-    │       └── schedulesApi.ts
+    │       ├── schedulesApi.ts
+    │       ├── insuranceApi.ts
+    │       └── medicationsApi.ts
     ├── middleware.ts                        # Edge middleware — route protection + auth redirects
     ├── tsconfig.json                        # @/* path alias
     ├── tailwind.config.js                   # helix (cyan), health (green), medical (slate) palettes

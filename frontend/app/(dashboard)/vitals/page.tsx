@@ -25,7 +25,7 @@ export default function VitalsPage() {
             <h3 className="font-semibold mb-4">Latest Readings</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Blood Pressure", value: vitals[0]?.bloodPressure, unit: "mmHg", icon: Heart, color: "text-rose-600" },
+                { label: "Blood Pressure", value: vitals[0]?.systolicBP && vitals[0]?.diastolicBP ? `${vitals[0].systolicBP}/${vitals[0].diastolicBP}` : null, unit: "mmHg", icon: Heart, color: "text-rose-600" },
                 { label: "Heart Rate", value: vitals[0]?.heartRate, unit: "bpm", icon: Activity, color: "text-helix-600" },
                 { label: "Temperature", value: vitals[0]?.temperature, unit: "°C", icon: Thermometer, color: "text-amber-600" },
                 { label: "O₂ Saturation", value: vitals[0]?.oxygenSaturation, unit: "%", icon: Wind, color: "text-health-600" },
@@ -61,7 +61,7 @@ export default function VitalsPage() {
                 {vitals.map((v: any) => (
                   <tr key={v.id} className="hover:bg-muted/30 transition text-sm">
                     <td className="px-4 py-3 text-muted-foreground">{format(new Date(v.createdAt), "MMM d, yyyy")}</td>
-                    <td className="px-4 py-3 font-medium">{v.bloodPressure || "—"}</td>
+                    <td className="px-4 py-3 font-medium">{v.systolicBP && v.diastolicBP ? `${v.systolicBP}/${v.diastolicBP}` : "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{v.heartRate ? `${v.heartRate} bpm` : "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{v.temperature ? `${v.temperature}°C` : "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{v.oxygenSaturation ? `${v.oxygenSaturation}%` : "—"}</td>

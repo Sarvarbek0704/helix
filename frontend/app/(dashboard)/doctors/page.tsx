@@ -39,7 +39,7 @@ export default function DoctorsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">Dr. {d.user?.firstName} {d.user?.lastName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{d.specialty}</p>
+                  <p className="text-xs text-muted-foreground truncate">{d.specialization}</p>
                 </div>
               </div>
               {d.department?.name && (

@@ -6,7 +6,21 @@ export const vitalsApi = createApi({
   baseQuery: bq,
   tagTypes: ["Vitals"],
   endpoints: (b) => ({
-    record: b.mutation<any, { patientId: string; bloodPressure?: string; heartRate?: number; temperature?: number; oxygenSaturation?: number; weight?: number; height?: number; notes?: string }>({
+    record: b.mutation<any, {
+      patientId: string;
+      appointmentId?: string;
+      temperature?: number;
+      systolicBP?: number;
+      diastolicBP?: number;
+      heartRate?: number;
+      respiratoryRate?: number;
+      oxygenSaturation?: number;
+      weight?: number;
+      height?: number;
+      glucoseLevel?: number;
+      notes?: string;
+      recordedAt?: string;
+    }>({
       query: (body) => ({ url: "/vitals", method: "POST", body }),
       invalidatesTags: ["Vitals"],
     }),

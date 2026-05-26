@@ -8,9 +8,11 @@ import { Bill } from '../../database/entities/bill.entity';
 import { LabOrder } from '../../database/entities/lab-order.entity';
 import { Prescription } from '../../database/entities/prescription.entity';
 import { DoctorProfile } from '../../database/entities/doctor-profile.entity';
+import { MedicalRecord } from '../../database/entities/medical-record.entity';
+import { Department } from '../../database/entities/department.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Appointment, Bill, LabOrder, Prescription, DoctorProfile])],
+  imports: [TypeOrmModule.forFeature([User, Appointment, Bill, LabOrder, Prescription, DoctorProfile, MedicalRecord, Department])],
   controllers: [AnalyticsController],
   providers: [AnalyticsService],
   exports: [AnalyticsService],
