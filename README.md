@@ -171,9 +171,9 @@ The `Sidebar` component reads `user.role` from Redux and renders a different nav
 
 | Role | Nav items |
 |---|---|
-| `admin` | Dashboard, Users, Patients, Doctors, Appointments, Departments, Billing, Insurance, Notifications, Settings |
+| `admin` | Dashboard, Users, Patients, Doctors, Appointments, Departments, Billing, Insurance, Medications, Notifications, Settings |
 | `patient` | Dashboard, Appointments, Medical Records, Vitals, Prescriptions, Lab Results, Billing, Insurance, Notifications, Settings |
-| `doctor` | Dashboard, Patients, Appointments, Records, Prescriptions, Lab Orders, My Schedule, Notifications, Settings |
+| `doctor` | Dashboard, Patients, Appointments, Records, Prescriptions, Lab Orders, Medications, My Schedule, Notifications, Settings |
 | `nurse` | Dashboard, Patients, Appointments, Record Vitals, Notifications, Settings |
 | `lab_tech` | Dashboard, Lab Orders, Notifications, Settings |
 
@@ -862,7 +862,8 @@ Role-based rendering — five distinct dashboards:
 | `/vitals` | Latest readings panel (4 metrics with icons) + full history table. |
 | `/prescriptions` | Cards grouped by status (active/dispensed/cancelled) with full medication item list per prescription. |
 | `/lab` | Patient view: Orders tab + Results tab. Lab_tech view: all orders with inline status update dropdown and upload results modal. Admin/doctor view: all orders with results inline. |
-| `/billing` | Admin: revenue summary cards + all bills with filter. Patient: own bills. Status filter tabs. |
+| `/billing` | Admin: revenue summary + all bills + "Create Bill" modal (patient select, itemized billing, due date) + "Record Payment" modal (amount, payment method). Patient: own bills with status filter. |
+| `/medications` | Searchable medication catalog. Admin: add/remove medications, toggle dosage forms, seed default catalog. Doctor: read-only search. |
 | `/insurance` | Patient: view available plans + own claims + submit claim modal. Admin: all claims with approve/reject processing modal. |
 | `/departments` | Card grid with department name and doctor count. Admin can add new via inline form or delete. |
 | `/notifications` | List with unread dot indicator, click to mark read, hover to delete. "Mark all read" bulk action. |
