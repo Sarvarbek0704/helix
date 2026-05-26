@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 import {
   Heart, LayoutDashboard, Users, UserCheck, Calendar, FileText,
   Activity, FlaskConical, Pill, CreditCard, Bell, Settings, LogOut,
-  Building2, Stethoscope, ChevronLeft, UserCog,
+  Building2, Stethoscope, ChevronLeft, UserCog, Shield,
 } from "lucide-react";
 import { logout } from "@/store/slices/authSlice";
 import type { RootState } from "@/store";
@@ -20,6 +20,7 @@ const NAV = {
     { href: "/appointments", icon: Calendar, label: "Appointments" },
     { href: "/departments", icon: Building2, label: "Departments" },
     { href: "/billing", icon: CreditCard, label: "Billing" },
+    { href: "/insurance", icon: Shield, label: "Insurance" },
     { href: "/notifications", icon: Bell, label: "Notifications" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ],
@@ -31,6 +32,7 @@ const NAV = {
     { href: "/prescriptions", icon: Pill, label: "Prescriptions" },
     { href: "/lab", icon: FlaskConical, label: "Lab Results" },
     { href: "/billing", icon: CreditCard, label: "Billing" },
+    { href: "/insurance", icon: Shield, label: "Insurance" },
     { href: "/notifications", icon: Bell, label: "Notifications" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ],

@@ -48,7 +48,7 @@ export function LabTechDashboard() {
               <div key={o.id} className="flex items-center gap-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
                 <FlaskConical className="w-4 h-4 text-amber-600 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{o.testType}</p>
+                  <p className="text-sm font-medium truncate">{(o.tests || []).join(", ")}</p>
                   <p className="text-xs text-muted-foreground">
                     {o.patient?.firstName} {o.patient?.lastName} · {o.createdAt ? format(new Date(o.createdAt), "MMM d, h:mm a") : "—"}
                   </p>

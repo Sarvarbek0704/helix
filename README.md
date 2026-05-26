@@ -171,8 +171,8 @@ The `Sidebar` component reads `user.role` from Redux and renders a different nav
 
 | Role | Nav items |
 |---|---|
-| `admin` | Dashboard, Patients, Doctors, Appointments, Departments, Billing, Notifications, Settings |
-| `patient` | Dashboard, Appointments, Medical Records, Vitals, Prescriptions, Lab Results, Billing, Notifications, Settings |
+| `admin` | Dashboard, Users, Patients, Doctors, Appointments, Departments, Billing, Insurance, Notifications, Settings |
+| `patient` | Dashboard, Appointments, Medical Records, Vitals, Prescriptions, Lab Results, Billing, Insurance, Notifications, Settings |
 | `doctor` | Dashboard, Patients, Appointments, Records, Prescriptions, Lab Orders, My Schedule, Notifications, Settings |
 | `nurse` | Dashboard, Patients, Appointments, Record Vitals, Notifications, Settings |
 | `lab_tech` | Dashboard, Lab Orders, Notifications, Settings |
@@ -559,7 +559,7 @@ All responses follow the envelope format:
 | GET | `/doctors` | No | — | List all doctors (public, paginated) |
 | GET | `/doctors/:id` | No | — | Get doctor by profile ID (public) |
 
-**Query params for `GET /doctors`:** `page`, `limit`, `search`, `department`, `specialty`
+**Query params for `GET /doctors`:** `page`, `limit`, `search`, `departmentId`, `specialization`
 
 ---
 
@@ -809,14 +809,14 @@ All responses follow the envelope format:
 | Route | Description |
 |---|---|
 | `/login` | Split-screen with brand panel. Email + password with show/hide. Detects unverified accounts and redirects to OTP page. |
-| `/register` | Role selector (Patient / Doctor / Nurse), name, email, phone, password. On submit → redirects to verify-otp. |
+| `/register` | Role selector (Patient / Doctor / Nurse / Lab Tech), name, email, phone, password. On submit → redirects to verify-otp. |
 | `/verify-otp` | Six individual digit inputs with auto-focus-advance and auto-submit on completion. 60-second resend countdown. |
 | `/forgot-password` | Email input → shows confirmation state after submit. |
 | `/reset-password` | Token from URL query param. New password input → redirects to login on success. |
 
 ### Dashboard — `/dashboard`
 
-Role-based rendering — three distinct dashboards:
+Role-based rendering — five distinct dashboards:
 
 **Admin Dashboard:**
 - 4 stat cards: Total Patients, Active Doctors, Today's Appointments, Monthly Revenue
@@ -836,6 +836,16 @@ Role-based rendering — three distinct dashboards:
 - Latest vitals grid (BP, heart rate, temperature, O₂)
 - 4 summary counters (total appointments, records, prescriptions, pending bills)
 
+**Nurse Dashboard:**
+- Stat cards: Total Patients, Today's date
+- Recent patients list with quick links to profiles
+- Quick actions panel (Record Vitals, Browse Patients, Appointments, Notifications)
+
+**Lab Tech Dashboard:**
+- Stat cards: Pending Orders, Completed, Total Orders
+- Pending lab orders list with priority indicators and patient names
+- Quick actions panel
+
 ### Feature Pages
 
 | Route | Description |
@@ -845,17 +855,20 @@ Role-based rendering — three distinct dashboards:
 | `/appointments/BookAppointmentModal` | 2-step modal: Step 1 — search and pick a doctor. Step 2 — pick date, select from available time slots (or manual datetime), enter reason and notes. |
 | `/patients` | Searchable table with patient number, email, join date. Paginated. |
 | `/patients/[id]` | Patient profile card (blood type, DOB, allergies), latest vitals grid, recent medical records list. |
-| `/doctors` | Card grid with specialty, department badge, rating stars. |
+| `/doctors` | Card grid with specialization, department badge, rating stars. Click to view detail page. |
+| `/doctors/[id]` | Doctor detail: profile, bio, education, stats (total patients, appointments, fee), languages, contact info. |
 | `/medical-records` | Chronological list with title, diagnosis, doctor name, date. |
 | `/medical-records/[id]` | Full record: type, title, description, ICD code, doctor, date, attachments. |
 | `/vitals` | Latest readings panel (4 metrics with icons) + full history table. |
 | `/prescriptions` | Cards grouped by status (active/dispensed/cancelled) with full medication item list per prescription. |
-| `/lab` | Patient view: Orders tab + Results tab. Admin/lab_tech view: all orders with priority and status. |
+| `/lab` | Patient view: Orders tab + Results tab. Lab_tech view: all orders with inline status update dropdown and upload results modal. Admin/doctor view: all orders with results inline. |
 | `/billing` | Admin: revenue summary cards + all bills with filter. Patient: own bills. Status filter tabs. |
+| `/insurance` | Patient: view available plans + own claims + submit claim modal. Admin: all claims with approve/reject processing modal. |
 | `/departments` | Card grid with department name and doctor count. Admin can add new via inline form or delete. |
 | `/notifications` | List with unread dot indicator, click to mark read, hover to delete. "Mark all read" bulk action. |
 | `/schedule` | Weekly availability toggle per day (Mon–Sun). Active days show time range pickers. Save button. |
-| `/settings` | Two tabs: Profile (name, phone; email locked) and Password (current → new → confirm). |
+| `/settings` | Profile tab (name, phone; email locked), Password tab, Health Profile tab (patients only: blood type, DOB, allergies, emergency contact, address), Doctor Profile tab (doctors only: specialization, bio, fees, license, languages). |
+| `/users` | Admin only: full user management table with role/status filters, suspend/activate/delete with confirmation. |
 
 ---
 
@@ -961,10 +974,12 @@ helix/
     │   └── (dashboard)/                     # Dashboard route group (with sidebar)
     │       ├── layout.tsx                   # Sidebar + Header shell
     │       ├── dashboard/
-    │       │   ├── page.tsx                 # Role router
+    │       │   ├── page.tsx                 # Role router (5 roles)
     │       │   ├── AdminDashboard.tsx
     │       │   ├── DoctorDashboard.tsx
-    │       │   └── PatientDashboard.tsx
+    │       │   ├── PatientDashboard.tsx
+    │       │   ├── NurseDashboard.tsx
+    │       │   └── LabTechDashboard.tsx
     │       ├── appointments/
     │       │   ├── page.tsx
     │       │   ├── BookAppointmentModal.tsx
@@ -972,7 +987,11 @@ helix/
     │       ├── patients/
     │       │   ├── page.tsx
     │       │   └── [id]/page.tsx
-    │       ├── doctors/page.tsx
+    │       ├── doctors/
+    │       │   ├── page.tsx
+    │       │   └── [id]/page.tsx
+    │       ├── users/page.tsx               # Admin only: user management
+    │       ├── insurance/page.tsx           # Patient claims + admin processing
     │       ├── medical-records/
     │       │   ├── page.tsx
     │       │   └── [id]/page.tsx
@@ -991,7 +1010,7 @@ helix/
     │   └── ui/
     │       └── StatCard.tsx                 # Reusable metric card with icon + color variants
     ├── store/
-    │   ├── index.ts                         # Redux store — 14 API reducers + auth slice
+    │   ├── index.ts                         # Redux store — 16 API reducers + auth slice
     │   ├── slices/
     │   │   └── authSlice.ts                 # User state, tokens, login/logout (syncs to cookies)
     │   └── api/
