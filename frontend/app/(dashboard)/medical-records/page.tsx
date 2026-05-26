@@ -36,7 +36,7 @@ export default function MedicalRecordsPage() {
                 <p className="font-semibold text-sm">{r.title}</p>
                 {r.diagnosis && <p className="text-sm text-muted-foreground truncate">Diagnosis: {r.diagnosis}</p>}
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  By Dr. {r.doctor?.firstName} {r.doctor?.lastName} · {format(new Date(r.createdAt), "MMM d, yyyy")}
+                  By Dr. {r.doctor?.user?.firstName} {r.doctor?.user?.lastName} · {format(new Date(r.createdAt), "MMM d, yyyy")}
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0 mt-1" />

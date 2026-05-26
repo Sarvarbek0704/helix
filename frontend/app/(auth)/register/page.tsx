@@ -10,6 +10,7 @@ const ROLES = [
   { value: "patient", label: "Patient" },
   { value: "doctor", label: "Doctor" },
   { value: "nurse", label: "Nurse" },
+  { value: "lab_tech", label: "Lab Tech" },
 ];
 
 export default function RegisterPage() {
@@ -70,7 +71,7 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1.5">I am a</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {ROLES.map((r) => (
                 <button key={r.value} type="button" onClick={() => set("role", r.value)}
                   className={`h-10 rounded-lg border text-sm font-medium transition ${form.role === r.value ? "bg-helix-600 text-white border-helix-600" : "bg-background hover:border-helix-400"}`}>

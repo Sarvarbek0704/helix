@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 import {
   Heart, LayoutDashboard, Users, UserCheck, Calendar, FileText,
   Activity, FlaskConical, Pill, CreditCard, Bell, Settings, LogOut,
-  Building2, Stethoscope, ChevronLeft,
+  Building2, Stethoscope, ChevronLeft, UserCog,
 } from "lucide-react";
 import { logout } from "@/store/slices/authSlice";
 import type { RootState } from "@/store";
@@ -14,6 +14,7 @@ import type { RootState } from "@/store";
 const NAV = {
   admin: [
     { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/users", icon: UserCog, label: "Users" },
     { href: "/patients", icon: Users, label: "Patients" },
     { href: "/doctors", icon: Stethoscope, label: "Doctors" },
     { href: "/appointments", icon: Calendar, label: "Appointments" },

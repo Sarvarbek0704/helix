@@ -32,7 +32,7 @@ export default function MedicalRecordDetailPage({ params }: { params: Promise<{ 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-muted/50">
             <p className="text-xs text-muted-foreground mb-0.5">Doctor</p>
-            <p className="text-sm font-medium">Dr. {record.doctor?.firstName} {record.doctor?.lastName}</p>
+            <p className="text-sm font-medium">Dr. {record.doctor?.user?.firstName} {record.doctor?.user?.lastName}</p>
           </div>
           {record.diagnosis && (
             <div className="p-3 rounded-lg bg-muted/50">
@@ -51,10 +51,10 @@ export default function MedicalRecordDetailPage({ params }: { params: Promise<{ 
           <div>
             <p className="text-sm font-medium mb-2">Attachments</p>
             <div className="space-y-2">
-              {record.attachments.map((a: any, i: number) => (
-                <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
+              {record.attachments.map((url: string, i: number) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/50 transition text-sm">
-                  <FileText className="w-4 h-4 text-muted-foreground" /> {a.name || `Attachment ${i + 1}`}
+                  <FileText className="w-4 h-4 text-muted-foreground" /> {url.split("/").pop() || `Attachment ${i + 1}`}
                 </a>
               ))}
             </div>

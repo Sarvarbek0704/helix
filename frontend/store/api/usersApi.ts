@@ -22,11 +22,11 @@ export const usersApi = createApi({
       invalidatesTags: (_r, _e, { id }) => [{ type: "Users", id }, "Users"],
     }),
     suspend: b.mutation<any, string>({
-      query: (id) => ({ url: `/users/${id}/suspend`, method: "PATCH" }),
+      query: (id) => ({ url: `/users/${id}/suspend`, method: "POST" }),
       invalidatesTags: ["Users"],
     }),
     activate: b.mutation<any, string>({
-      query: (id) => ({ url: `/users/${id}/activate`, method: "PATCH" }),
+      query: (id) => ({ url: `/users/${id}/activate`, method: "POST" }),
       invalidatesTags: ["Users"],
     }),
     deleteUser: b.mutation<any, string>({

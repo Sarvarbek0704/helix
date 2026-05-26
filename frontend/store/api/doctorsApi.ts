@@ -14,7 +14,7 @@ export const doctorsApi = createApi({
       query: (body) => ({ url: "/doctors/me", method: "PATCH", body }),
       invalidatesTags: ["DoctorProfile"],
     }),
-    getAllDoctors: b.query<any, { page?: number; limit?: number; search?: string; department?: string; specialty?: string }>({
+    getAllDoctors: b.query<any, { page?: number; limit?: number; search?: string; departmentId?: string; specialization?: string }>({
       query: (params) => ({ url: "/doctors", params }),
       providesTags: ["Doctors"],
     }),
