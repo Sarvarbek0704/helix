@@ -16,6 +16,10 @@ import { departmentsApi } from "./api/departmentsApi";
 import { schedulesApi } from "./api/schedulesApi";
 import { insuranceApi } from "./api/insuranceApi";
 import { medicationsApi } from "./api/medicationsApi";
+import { searchApi } from "./api/searchApi";
+import { timelineApi } from "./api/timelineApi";
+import { waitlistApi } from "./api/waitlistApi";
+import { auditApi } from "./api/auditApi";
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +40,10 @@ export const store = configureStore({
     [schedulesApi.reducerPath]: schedulesApi.reducer,
     [insuranceApi.reducerPath]: insuranceApi.reducer,
     [medicationsApi.reducerPath]: medicationsApi.reducer,
+    [searchApi.reducerPath]: searchApi.reducer,
+    [timelineApi.reducerPath]: timelineApi.reducer,
+    [waitlistApi.reducerPath]: waitlistApi.reducer,
+    [auditApi.reducerPath]: auditApi.reducer,
   },
   middleware: (gDM) =>
     gDM().concat(
@@ -55,6 +63,10 @@ export const store = configureStore({
       schedulesApi.middleware,
       insuranceApi.middleware,
       medicationsApi.middleware,
+      searchApi.middleware,
+      timelineApi.middleware,
+      waitlistApi.middleware,
+      auditApi.middleware,
     ),
 });
 

@@ -12,7 +12,7 @@ export class InsuranceController {
   @Post('plans') @Roles('admin') createPlan(@Body() dto: any) { return this.insuranceService.createPlan(dto); }
   @Patch('plans/:id') @Roles('admin') updatePlan(@Param('id') id: string, @Body() dto: any) { return this.insuranceService.updatePlan(id, dto); }
   @Post('claims') @Roles('patient', 'admin') submitClaim(@CurrentUser() u: any, @Body() dto: any) { return this.insuranceService.submitClaim(u.id, dto); }
-  @Get('claims/my') @Roles('patient') getMyClaims(@CurrentUser() u: any) { return this.insuranceService.getMyClaims(u.id); }
-  @Get('claims') @Roles('admin') getAllClaims(@Query() q: any) { return this.insuranceService.getAllClaims(q); }
+  @Get('claims/my') @Roles('patient', 'doctor', 'nurse', 'lab_tech', 'admin') getMyClaims(@CurrentUser() u: any) { return this.insuranceService.getMyClaims(u.id); }
+  @Get('claims') @Roles('admin', 'doctor', 'nurse') getAllClaims(@Query() q: any) { return this.insuranceService.getAllClaims(q); }
   @Patch('claims/:id') @Roles('admin') processClaim(@Param('id') id: string, @Body() dto: any) { return this.insuranceService.processClaim(id, dto); }
 }

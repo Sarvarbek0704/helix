@@ -14,8 +14,8 @@ export class AppointmentsController {
   @Get('doctor') @Roles('doctor') getDoctorAppointments(@CurrentUser() user: any, @Query() query: any) { return this.appointmentsService.getDoctorAppointments(user.id, query); }
   @Get('doctor/today-stats') @Roles('doctor') getTodayStats(@CurrentUser() user: any) { return this.appointmentsService.getTodayStats(user.id); }
   @Get(':id') findOne(@Param('id') id: string) { return this.appointmentsService.findOne(id); }
-  @Patch(':id/confirm') @Roles('doctor') confirm(@Param('id') id: string, @CurrentUser() user: any) { return this.appointmentsService.confirm(id, user.id); }
-  @Patch(':id/start') @Roles('doctor') start(@Param('id') id: string, @CurrentUser() user: any) { return this.appointmentsService.start(id, user.id); }
-  @Patch(':id/complete') @Roles('doctor') complete(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: DoctorUpdateDto) { return this.appointmentsService.complete(id, user.id, dto); }
+  @Patch(':id/confirm') @Roles('doctor', 'admin', 'nurse') confirm(@Param('id') id: string, @CurrentUser() user: any) { return this.appointmentsService.confirm(id, user.id, user.role); }
+  @Patch(':id/start') @Roles('doctor', 'admin', 'nurse') start(@Param('id') id: string, @CurrentUser() user: any) { return this.appointmentsService.start(id, user.id, user.role); }
+  @Patch(':id/complete') @Roles('doctor', 'admin') complete(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: DoctorUpdateDto) { return this.appointmentsService.complete(id, user.id, user.role, dto); }
   @Patch(':id/cancel') cancel(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: CancelDto) { return this.appointmentsService.cancel(id, user.id, user.role, dto); }
 }

@@ -11,13 +11,21 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
       const allowed = [
-        process.env.FRONTEND_URL || 'http://localhost:3002',
+        process.env.FRONTEND_URL,
         'http://localhost:3002',
         'http://localhost:3000',
-      ];
-      if (!origin || allowed.includes(origin)) return callback(null, true);
-      callback(new Error('Not allowed by CORS'));
+      ].filter(Boolean);
+
+      // Allow any vercel.app subdomain or custom domain set via env
+      const isVercel = origin.endsWith('.vercel.app');
+      const isAllowed = allowed.includes(origin) || isVercel;
+
+      if (isAllowed) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -36,8 +44,14 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const port = config.get<number>('app.port') || 5002;
 
-  await app.listen(port);
-  console.log(`🏥 Helix API running on http://localhost:${port}/api`);
+  // Simple health check (outside global /api prefix)
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/api/health', (_req: any, res: any) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  await app.listen(port, '0.0.0.0');
+  console.log(`🏥 Helix API running on port ${port}`);
 }
 
 bootstrap();

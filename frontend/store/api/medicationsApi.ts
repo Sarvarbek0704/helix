@@ -6,7 +6,7 @@ export const medicationsApi = createApi({
   baseQuery: bq,
   tagTypes: ["Medications"],
   endpoints: (b) => ({
-    search: b.query<any, { q?: string; page?: number; limit?: number }>({
+    search: b.query<any, { search?: string; page?: number; limit?: number }>({
       query: (params) => ({ url: "/medications", params }),
       providesTags: ["Medications"],
     }),
@@ -14,7 +14,7 @@ export const medicationsApi = createApi({
       query: (id) => `/medications/${id}`,
       providesTags: (_r, _e, id) => [{ type: "Medications", id }],
     }),
-    create: b.mutation<any, { name: string; genericName?: string; category?: string; description?: string; dosageForms?: string[] }>({
+    create: b.mutation<any, { name: string; genericName?: string; category?: string; description?: string; form?: string }>({
       query: (body) => ({ url: "/medications", method: "POST", body }),
       invalidatesTags: ["Medications"],
     }),

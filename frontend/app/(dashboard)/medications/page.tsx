@@ -6,7 +6,6 @@ import { Pill, Plus, X, Loader2, Search, Trash2, Database } from "lucide-react";
 import { toast } from "sonner";
 import type { RootState } from "@/store";
 
-const DOSAGE_FORMS = ["tablet", "capsule", "liquid", "injection", "cream", "inhaler", "patch", "drops"];
 const CATEGORIES = ["antibiotic", "analgesic", "antihypertensive", "antidiabetic", "antihistamine", "antidepressant", "antifungal", "antiviral", "cardiovascular", "respiratory", "other"];
 
 export default function MedicationsPage() {
@@ -16,21 +15,14 @@ export default function MedicationsPage() {
 
   const [q, setQ] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: "", genericName: "", category: "other", description: "", dosageForms: [] as string[] });
+  const [form, setForm] = useState({ name: "", genericName: "", category: "other", description: "", form: "" });
 
-  const { data, isLoading, isFetching } = useSearchQuery({ q: q || undefined, limit: 50 });
+  const { data, isLoading, isFetching } = useSearchQuery({ search: q || undefined, limit: 50 });
   const medications = data?.data || [];
 
   const [create, { isLoading: creating }] = useCreateMutation();
   const [remove] = useRemoveMutation();
   const [seed, { isLoading: seeding }] = useSeedMutation();
-
-  function toggleDosageForm(f: string) {
-    setForm((prev) => ({
-      ...prev,
-      dosageForms: prev.dosageForms.includes(f) ? prev.dosageForms.filter((d) => d !== f) : [...prev.dosageForms, f],
-    }));
-  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -40,11 +32,11 @@ export default function MedicationsPage() {
         genericName: form.genericName || undefined,
         category: form.category || undefined,
         description: form.description || undefined,
-        dosageForms: form.dosageForms.length ? form.dosageForms : undefined,
+        form: form.form || undefined,
       }).unwrap();
       toast.success("Medication added to catalog");
       setShowCreate(false);
-      setForm({ name: "", genericName: "", category: "other", description: "", dosageForms: [] });
+      setForm({ name: "", genericName: "", category: "other", description: "", form: "" });
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create medication");
     }
@@ -128,9 +120,9 @@ export default function MedicationsPage() {
                   {med.category && (
                     <span className="text-xs px-2 py-0.5 bg-muted rounded-full capitalize">{med.category.replace("_", " ")}</span>
                   )}
-                  {(med.dosageForms || []).map((f: string) => (
-                    <span key={f} className="text-xs px-2 py-0.5 bg-helix-50 text-helix-700 rounded-full capitalize dark:bg-helix-900/30 dark:text-helix-300">{f}</span>
-                  ))}
+                  {med.form && (
+                    <span className="text-xs px-2 py-0.5 bg-helix-50 text-helix-700 rounded-full capitalize dark:bg-helix-900/30 dark:text-helix-300">{med.form}</span>
+                  )}
                 </div>
                 {med.description && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{med.description}</p>}
               </div>
@@ -176,15 +168,10 @@ export default function MedicationsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Dosage Forms</label>
-                <div className="flex flex-wrap gap-2">
-                  {DOSAGE_FORMS.map((f) => (
-                    <button key={f} type="button" onClick={() => toggleDosageForm(f)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition ${form.dosageForms.includes(f) ? "bg-helix-600 text-white border-helix-600" : "border-border hover:bg-muted"}`}>
-                      {f}
-                    </button>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium mb-1.5">Form</label>
+                <input value={form.form} onChange={(e) => setForm({ ...form, form: e.target.value })}
+                  placeholder="e.g. tablet, capsule, liquid..."
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5">Description</label>

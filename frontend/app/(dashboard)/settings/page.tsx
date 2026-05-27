@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { User, Lock, Loader2, Eye, EyeOff, Stethoscope, Heart } from "lucide-react";
+import { User, Lock, Loader2, Eye, EyeOff, Heart, Stethoscope } from "lucide-react";
 import { useUpdateMeMutation } from "@/store/api/usersApi";
 import { useChangePasswordMutation } from "@/store/api/authApi";
-import { useGetMyProfileQuery as useGetDoctorProfile, useUpdateMyProfileMutation } from "@/store/api/doctorsApi";
 import { useGetMyProfileQuery as useGetPatientProfile, useUpdateMyProfileMutation as useUpdatePatientProfile } from "@/store/api/patientsApi";
+import { useGetMyProfileQuery as useGetDoctorProfile, useUpdateMyProfileMutation } from "@/store/api/doctorsApi";
 import { setUser } from "@/store/slices/authSlice";
 import type { RootState } from "@/store";
 
@@ -18,16 +18,16 @@ export default function SettingsPage() {
   const isPatient = user?.role === "patient";
   const isDoctor = user?.role === "doctor";
 
-  const [tab, setTab] = useState<"profile" | "password" | "doctor" | "health">("profile");
+  const [tab, setTab] = useState<"profile" | "password" | "health" | "doctor">("profile");
 
   const [updateMe, { isLoading: saving }] = useUpdateMeMutation();
   const [changePass, { isLoading: changing }] = useChangePasswordMutation();
 
+  const { data: patientProfile } = useGetPatientProfile(undefined, { skip: !isPatient });
+  const [updatePatientProfileMutation, { isLoading: savingHealth }] = useUpdatePatientProfile();
+
   const { data: doctorProfile } = useGetDoctorProfile(undefined, { skip: !isDoctor });
   const [updateDoctorProfile, { isLoading: savingDoctor }] = useUpdateMyProfileMutation();
-
-  const { data: patientProfile } = useGetPatientProfile(undefined, { skip: !isPatient });
-  const [updatePatientProfile, { isLoading: savingHealth }] = useUpdatePatientProfile();
 
   const [profile, setProfile] = useState({
     firstName: user?.firstName || "",
@@ -37,19 +37,50 @@ export default function SettingsPage() {
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const [showPw, setShowPw] = useState(false);
 
-  const [doctorForm, setDoctorForm] = useState({
-    specialization: "", subSpecialization: "", bio: "", education: "",
-    yearsOfExperience: "", consultationFee: "", followUpFee: "",
-    licenseNumber: "", languages: "", isAcceptingPatients: true,
+  const [healthForm, setHealthForm] = useState({
+    dateOfBirth: "",
+    gender: "",
+    bloodType: "unknown",
+    height: "",
+    weight: "",
+    allergies: "",
+    chronicConditions: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactRelation: "",
+    address: "",
+    city: "",
+    country: "",
   });
 
-  const [healthForm, setHealthForm] = useState({
-    dateOfBirth: "", gender: "", bloodType: "unknown",
-    height: "", weight: "",
-    allergies: "", chronicConditions: "",
-    emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelation: "",
-    address: "", city: "", country: "",
+  const [doctorForm, setDoctorForm] = useState({
+    specialization: "",
+    subSpecialization: "",
+    bio: "",
+    education: "",
+    yearsOfExperience: "",
+    consultationFee: "",
+    followUpFee: "",
+    licenseNumber: "",
+    languages: "",
+    isAcceptingPatients: true,
   });
+
+  const resolvedHealth = patientProfile ? {
+    dateOfBirth: healthForm.dateOfBirth || (patientProfile.dateOfBirth ? patientProfile.dateOfBirth.slice(0, 10) : ""),
+    gender: healthForm.gender || patientProfile.gender || "",
+    bloodType: healthForm.bloodType !== "unknown" ? healthForm.bloodType : (patientProfile.bloodType || "unknown"),
+    height: healthForm.height || String(patientProfile.height || ""),
+    weight: healthForm.weight || String(patientProfile.weight || ""),
+    allergies: healthForm.allergies || (Array.isArray(patientProfile.allergies) ? patientProfile.allergies.join(", ") : patientProfile.allergies || ""),
+    chronicConditions: healthForm.chronicConditions || (Array.isArray(patientProfile.chronicConditions) ? patientProfile.chronicConditions.join(", ") : patientProfile.chronicConditions || ""),
+    emergencyContactName: healthForm.emergencyContactName || patientProfile.emergencyContactName || "",
+    emergencyContactPhone: healthForm.emergencyContactPhone || patientProfile.emergencyContactPhone || "",
+    emergencyContactRelation: healthForm.emergencyContactRelation || patientProfile.emergencyContactRelation || "",
+    address: healthForm.address || patientProfile.address || "",
+    city: healthForm.city || patientProfile.city || "",
+    country: healthForm.country || patientProfile.country || "",
+  } : healthForm;
 
   const resolvedDoctor = doctorProfile ? {
     specialization: doctorForm.specialization || doctorProfile.specialization || "",
@@ -64,29 +95,15 @@ export default function SettingsPage() {
     isAcceptingPatients: doctorForm.isAcceptingPatients,
   } : doctorForm;
 
-  const resolvedHealth = patientProfile ? {
-    dateOfBirth: healthForm.dateOfBirth || (patientProfile.dateOfBirth ? patientProfile.dateOfBirth.slice(0, 10) : ""),
-    gender: healthForm.gender || patientProfile.gender || "",
-    bloodType: healthForm.bloodType !== "unknown" ? healthForm.bloodType : (patientProfile.bloodType || "unknown"),
-    height: healthForm.height || String(patientProfile.height || ""),
-    weight: healthForm.weight || String(patientProfile.weight || ""),
-    allergies: healthForm.allergies || (patientProfile.allergies || []).join(", "),
-    chronicConditions: healthForm.chronicConditions || (patientProfile.chronicConditions || []).join(", "),
-    emergencyContactName: healthForm.emergencyContactName || patientProfile.emergencyContactName || "",
-    emergencyContactPhone: healthForm.emergencyContactPhone || patientProfile.emergencyContactPhone || "",
-    emergencyContactRelation: healthForm.emergencyContactRelation || patientProfile.emergencyContactRelation || "",
-    address: healthForm.address || patientProfile.address || "",
-    city: healthForm.city || patientProfile.city || "",
-    country: healthForm.country || patientProfile.country || "",
-  } : healthForm;
-
   async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
     try {
       const updated = await updateMe(profile).unwrap();
       dispatch(setUser(updated));
       toast.success("Profile updated");
-    } catch { toast.error("Failed to update profile"); }
+    } catch {
+      toast.error("Failed to update profile");
+    }
   }
 
   async function handleHealthSave(e: React.FormEvent) {
@@ -107,9 +124,11 @@ export default function SettingsPage() {
       if (resolvedHealth.weight) payload.weight = Number(resolvedHealth.weight);
       if (resolvedHealth.allergies) payload.allergies = resolvedHealth.allergies.split(",").map((s: string) => s.trim()).filter(Boolean);
       if (resolvedHealth.chronicConditions) payload.chronicConditions = resolvedHealth.chronicConditions.split(",").map((s: string) => s.trim()).filter(Boolean);
-      await updatePatientProfile(payload).unwrap();
+      await updatePatientProfileMutation(payload).unwrap();
       toast.success("Health profile updated");
-    } catch { toast.error("Failed to update health profile"); }
+    } catch {
+      toast.error("Failed to update health profile");
+    }
   }
 
   async function handleDoctorProfileSave(e: React.FormEvent) {
@@ -129,12 +148,17 @@ export default function SettingsPage() {
       if (resolvedDoctor.languages) payload.languages = resolvedDoctor.languages.split(",").map((l: string) => l.trim()).filter(Boolean);
       await updateDoctorProfile(payload).unwrap();
       toast.success("Doctor profile updated");
-    } catch { toast.error("Failed to update profile"); }
+    } catch {
+      toast.error("Failed to update profile");
+    }
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
-    if (passwords.newPassword !== passwords.confirm) { toast.error("Passwords don't match"); return; }
+    if (passwords.newPassword !== passwords.confirm) {
+      toast.error("Passwords don't match");
+      return;
+    }
     try {
       await changePass({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword }).unwrap();
       toast.success("Password changed successfully");
@@ -183,7 +207,8 @@ export default function SettingsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5">Phone</label>
-              <input type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="+1 234 567 8900" className={inp} />
+              <input type="tel" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                placeholder="+1 234 567 8900" className={inp} />
             </div>
             <button type="submit" disabled={saving} className="h-10 px-6 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition disabled:opacity-60">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save changes
@@ -273,6 +298,7 @@ export default function SettingsPage() {
                 onChange={(e) => setHealthForm({ ...healthForm, chronicConditions: e.target.value })}
                 placeholder="Hypertension, Type 2 Diabetes" className={inp} />
             </div>
+
             <p className="text-sm font-semibold pt-1">Emergency Contact</p>
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -288,12 +314,13 @@ export default function SettingsPage() {
                   placeholder="+1 555 000 0000" className={inp} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">Relation</label>
+                <label className="block text-sm font-medium mb-1.5">Relationship</label>
                 <input value={resolvedHealth.emergencyContactRelation}
                   onChange={(e) => setHealthForm({ ...healthForm, emergencyContactRelation: e.target.value })}
                   placeholder="Spouse, Parent..." className={inp} />
               </div>
             </div>
+
             <p className="text-sm font-semibold pt-1">Address</p>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-3">
@@ -315,6 +342,7 @@ export default function SettingsPage() {
                   placeholder="United States" className={inp} />
               </div>
             </div>
+
             <button type="submit" disabled={savingHealth} className="h-10 px-6 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition disabled:opacity-60">
               {savingHealth && <Loader2 className="w-4 h-4 animate-spin" />} Save health profile
             </button>

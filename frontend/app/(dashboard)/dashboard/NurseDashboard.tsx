@@ -1,5 +1,5 @@
 "use client";
-import { Activity, Users, Calendar, ClipboardList } from "lucide-react";
+import { Activity, Users, Calendar, ClipboardList, Bell } from "lucide-react";
 import { useGetAllPatientsQuery } from "@/store/api/patientsApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
@@ -63,14 +63,14 @@ export function NurseDashboard() {
           <h3 className="font-semibold flex items-center gap-2 mb-4"><ClipboardList className="w-4 h-4 text-helix-600" /> Quick Actions</h3>
           <div className="space-y-2">
             {[
-              { href: "/vitals", label: "Record vitals", desc: "Measure and log patient vitals", icon: "🩺" },
-              { href: "/patients", label: "Browse patients", desc: "View all registered patients", icon: "👥" },
-              { href: "/appointments", label: "Appointments", desc: "Check today's schedule", icon: "📅" },
-              { href: "/notifications", label: "Notifications", desc: "View alerts and messages", icon: "🔔" },
+              { href: "/vitals", label: "Record vitals", desc: "Measure and log patient vitals", icon: Activity },
+              { href: "/patients", label: "Browse patients", desc: "View all registered patients", icon: Users },
+              { href: "/appointments", label: "Appointments", desc: "Check today's schedule", icon: Calendar },
+              { href: "/notifications", label: "Notifications", desc: "View alerts and messages", icon: Bell },
             ].map((item) => (
               <Link key={item.href} href={item.href}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition group">
-                <span className="text-xl">{item.icon}</span>
+                <item.icon className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.desc}</p>

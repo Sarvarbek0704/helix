@@ -43,10 +43,11 @@ export function DoctorDashboard() {
               <Link key={a.id} href={`/appointments/${a.id}`}
                 className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition group">
                 <div className="w-14 text-center shrink-0">
-                  <p className="text-sm font-semibold text-helix-600">{a.appointmentTime?.slice(0, 5) || "—"}</p>
+                  <p className="text-sm font-semibold text-helix-600">{format(new Date(a.scheduledAt), "h:mm")}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(a.scheduledAt), "a")}</p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{a.patient?.firstName ? `${a.patient.firstName} ${a.patient.lastName}` : "Patient"}</p>
+                  <p className="text-sm font-medium truncate">{a.patientName || "Patient"}</p>
                   <p className="text-xs text-muted-foreground truncate">{a.reason}</p>
                 </div>
                 <StatusBadge status={a.status} />

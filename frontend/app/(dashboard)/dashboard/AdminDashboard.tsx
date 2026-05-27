@@ -40,7 +40,7 @@ export function AdminDashboard() {
               {(data?.recentAppointments || []).slice(0, 5).map((a: any) => (
                 <div key={a.id} className="flex items-center justify-between py-2 border-b last:border-0">
                   <div>
-                    <p className="text-sm font-medium">{a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Patient"}</p>
+                    <p className="text-sm font-medium">{a.patientName || "Patient"}</p>
                     <p className="text-xs text-muted-foreground">{a.reason || "Appointment"}</p>
                   </div>
                   <StatusBadge status={a.status} />

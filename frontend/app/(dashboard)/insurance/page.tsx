@@ -17,17 +17,19 @@ const STATUS_COLORS: Record<string, string> = {
 export default function InsurancePage() {
   const user = useSelector((s: RootState) => s.auth.user);
   const role = user?.role;
+  const isStaff = ["admin", "doctor", "nurse"].includes(role || "");
   const isAdmin = role === "admin";
+  const isPatient = role === "patient";
 
-  const myClaimsQuery = useGetMyClaimsQuery({ limit: 50 }, { skip: isAdmin });
-  const allClaimsQuery = useGetAllClaimsQuery({ limit: 100 }, { skip: !isAdmin });
+  const myClaimsQuery = useGetMyClaimsQuery({ limit: 50 }, { skip: isStaff });
+  const allClaimsQuery = useGetAllClaimsQuery({ limit: 100 }, { skip: !isStaff });
   const { data: plansData } = useGetPlansQuery({ limit: 100 });
 
   const [submitClaim, { isLoading: submitting }] = useSubmitClaimMutation();
   const [processClaim] = useProcessClaimMutation();
 
-  const claims = isAdmin ? (allClaimsQuery.data?.data || []) : (myClaimsQuery.data?.data || []);
-  const isLoading = isAdmin ? allClaimsQuery.isLoading : myClaimsQuery.isLoading;
+  const claims = isStaff ? (allClaimsQuery.data?.data || []) : (myClaimsQuery.data?.data || []);
+  const isLoading = isStaff ? allClaimsQuery.isLoading : myClaimsQuery.isLoading;
   const plans = plansData?.data || plansData || [];
 
   const [showForm, setShowForm] = useState(false);
@@ -67,8 +69,8 @@ export default function InsurancePage() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{isAdmin ? "All insurance claims" : "Your insurance claims"}</p>
-        {!isAdmin && (
+        <p className="text-sm text-muted-foreground">{isStaff ? "All insurance claims" : "Your insurance claims"}</p>
+        {isPatient && (
           <button onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-helix-600 hover:bg-helix-700 text-white text-sm font-semibold rounded-lg transition">
             <Plus className="w-4 h-4" /> Submit Claim
@@ -76,7 +78,7 @@ export default function InsurancePage() {
         )}
       </div>
 
-      {!isAdmin && plans.length > 0 && (
+      {isPatient && plans.length > 0 && (
         <div className="bg-helix-50 dark:bg-helix-900/20 rounded-xl border border-helix-200 dark:border-helix-800 p-4">
           <p className="text-sm font-semibold text-helix-800 dark:text-helix-200 mb-2">Available Insurance Plans</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -96,7 +98,7 @@ export default function InsurancePage() {
         <div className="text-center py-16">
           <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-muted-foreground">No insurance claims found</p>
-          {!isAdmin && <p className="text-xs text-muted-foreground mt-1">Submit a claim to get reimbursed for medical expenses</p>}
+          {isPatient && <p className="text-xs text-muted-foreground mt-1">Submit a claim to get reimbursed for medical expenses</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -110,7 +112,7 @@ export default function InsurancePage() {
                       {c.status}
                     </span>
                   </div>
-                  {isAdmin && c.patient && (
+                  {isStaff && c.patient && (
                     <p className="text-xs text-muted-foreground mt-0.5">{c.patient.firstName} {c.patient.lastName}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -121,7 +123,7 @@ export default function InsurancePage() {
                   )}
                   {c.notes && <p className="text-xs text-muted-foreground mt-1">{c.notes}</p>}
                 </div>
-                {isAdmin && c.status === "pending" && (
+                {isAdmin && c.status !== "approved" && c.status !== "rejected" && (
                   <button onClick={() => { setProcessing(c.id); setProcessForm({ status: "approved", approvedAmount: "", notes: "" }); }}
                     className="shrink-0 text-xs px-3 py-1.5 rounded-lg border hover:bg-muted transition">
                     Process

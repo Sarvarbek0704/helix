@@ -1,12 +1,38 @@
 "use client";
-import { use } from "react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useGetDoctorByIdQuery } from "@/store/api/doctorsApi";
-import { ArrowLeft, Star, Stethoscope, Building2, Globe, GraduationCap, Clock, UserCheck } from "lucide-react";
+import { useAddToWaitlistMutation } from "@/store/api/waitlistApi";
+import { ArrowLeft, Star, Stethoscope, Building2, Globe, GraduationCap, Clock, UserCheck, Users, Calendar, CreditCard, ListPlus, X, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import type { RootState } from "@/store";
 
-export default function DoctorDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function DoctorDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { data: doctor, isLoading } = useGetDoctorByIdQuery(id);
+  const user = useSelector((s: RootState) => s.auth.user);
+  const isPatient = user?.role === "patient";
+
+  const [addToWaitlist, { isLoading: addingWaitlist }] = useAddToWaitlistMutation();
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistForm, setWaitlistForm] = useState({ preferredDate: "", reason: "" });
+
+  async function handleJoinWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await addToWaitlist({
+        doctorId: id,
+        preferredDate: waitlistForm.preferredDate || undefined,
+        reason: waitlistForm.reason || undefined,
+      }).unwrap();
+      toast.success("Added to waitlist successfully");
+      setShowWaitlistModal(false);
+      setWaitlistForm({ preferredDate: "", reason: "" });
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to join waitlist");
+    }
+  }
 
   if (isLoading) {
     return (
@@ -40,11 +66,21 @@ export default function DoctorDetailPage({ params }: { params: Promise<{ id: str
                   <p className="text-sm text-muted-foreground">{doctor.subSpecialization}</p>
                 )}
               </div>
-              {doctor.isAcceptingPatients && (
-                <span className="flex items-center gap-1.5 text-xs px-2.5 py-1 bg-health-100 text-health-700 rounded-full font-medium">
-                  <UserCheck className="w-3 h-3" /> Accepting Patients
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                {doctor.isAcceptingPatients && (
+                  <span className="flex items-center gap-1.5 text-xs px-2.5 py-1 bg-health-100 text-health-700 rounded-full font-medium">
+                    <UserCheck className="w-3 h-3" /> Accepting Patients
+                  </span>
+                )}
+                {isPatient && (
+                  <button
+                    onClick={() => setShowWaitlistModal(true)}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-helix-600 hover:bg-helix-700 text-white rounded-full font-medium transition"
+                  >
+                    <ListPlus className="w-3.5 h-3.5" /> Join Waitlist
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
@@ -71,12 +107,14 @@ export default function DoctorDetailPage({ params }: { params: Promise<{ id: str
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Total Patients", value: doctor.totalPatients || 0, icon: "👥" },
-          { label: "Appointments", value: doctor.totalAppointments || 0, icon: "📅" },
-          { label: "Consultation Fee", value: doctor.consultationFee ? `$${doctor.consultationFee}` : "—", icon: "💳" },
-        ].map(({ label, value, icon }) => (
+          { label: "Total Patients", value: doctor.totalPatients || 0, icon: Users },
+          { label: "Appointments", value: doctor.totalAppointments || 0, icon: Calendar },
+          { label: "Consultation Fee", value: doctor.consultationFee ? `$${doctor.consultationFee}` : "—", icon: CreditCard },
+        ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card rounded-xl border shadow-card p-4 text-center">
-            <p className="text-2xl mb-1">{icon}</p>
+            <div className="flex justify-center mb-2">
+              <Icon className="w-6 h-6 text-helix-600" />
+            </div>
             <p className="text-xl font-bold">{value}</p>
             <p className="text-xs text-muted-foreground">{label}</p>
           </div>
@@ -147,6 +185,56 @@ export default function DoctorDetailPage({ params }: { params: Promise<{ id: str
           )}
         </div>
       </div>
+
+      {/* Join Waitlist Modal */}
+      {showWaitlistModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-xl border shadow-xl w-full max-w-sm">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="font-semibold">Join Waitlist</h3>
+              <button onClick={() => setShowWaitlistModal(false)} className="text-muted-foreground hover:text-foreground transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleJoinWaitlist} className="p-5 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Join the waitlist for Dr. {u?.firstName} {u?.lastName}. You&apos;ll be notified when an appointment slot opens up.
+              </p>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Preferred Date (optional)</label>
+                <input
+                  type="date"
+                  value={waitlistForm.preferredDate}
+                  onChange={(e) => setWaitlistForm({ ...waitlistForm, preferredDate: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full h-10 px-3 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Reason (optional)</label>
+                <textarea
+                  value={waitlistForm.reason}
+                  onChange={(e) => setWaitlistForm({ ...waitlistForm, reason: e.target.value })}
+                  rows={3}
+                  placeholder="Brief description of your concern..."
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-helix-500 resize-none"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowWaitlistModal(false)}
+                  className="flex-1 h-10 border rounded-lg text-sm font-medium hover:bg-muted transition">
+                  Cancel
+                </button>
+                <button type="submit" disabled={addingWaitlist}
+                  className="flex-1 h-10 bg-helix-600 text-white rounded-lg text-sm font-semibold hover:bg-helix-700 disabled:opacity-60 flex items-center justify-center gap-2 transition">
+                  {addingWaitlist && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Join Waitlist
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

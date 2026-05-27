@@ -50,7 +50,7 @@ export default function DoctorsPage() {
               <div className="flex items-center justify-between mt-auto">
                 {d.rating ? (
                   <div className="flex items-center gap-1 text-xs text-amber-600">
-                    <Star className="w-3 h-3 fill-amber-400 stroke-amber-400" /> {d.rating.toFixed(1)}
+                    <Star className="w-3 h-3 fill-amber-400 stroke-amber-400" /> {Number(d.rating).toFixed(1)}
                   </div>
                 ) : <span />}
                 <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />

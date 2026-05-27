@@ -8,8 +8,9 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class MedicalController {
   constructor(private medicalService: MedicalService) {}
 
-  @Post() @Roles('doctor', 'nurse') create(@CurrentUser() user: any, @Body() dto: CreateMedicalRecordDto) { return this.medicalService.create(user.id, dto); }
+  @Post() @Roles('doctor', 'nurse', 'admin') create(@CurrentUser() user: any, @Body() dto: CreateMedicalRecordDto) { return this.medicalService.create(user.id, dto); }
   @Get('my') @Roles('patient') getMyRecords(@CurrentUser() user: any, @Query() query: any) { return this.medicalService.getMyRecords(user.id, query); }
+  @Get('all') @Roles('doctor', 'nurse', 'admin') getAllRecords(@Query() query: any) { return this.medicalService.getAllRecords(query); }
   @Get('patient/:id') @Roles('doctor', 'nurse', 'admin') getPatientRecords(@Param('id') id: string, @Query() query: any) { return this.medicalService.getPatientRecords(id, query); }
   @Get(':id') findOne(@Param('id') id: string) { return this.medicalService.findOne(id); }
   @Patch(':id') @Roles('doctor') update(@Param('id') id: string, @CurrentUser() user: any, @Body() dto: UpdateMedicalRecordDto) { return this.medicalService.update(id, user.id, dto); }

@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: helix-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: node dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: FRONTEND_URL
+        sync: false
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_SECURE
+        value: false
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Helix Health
+      - key: MAIL_FROM_EMAIL
+        value: noreply@helixhealth.app
+      - key: THROTTLE_TTL
+        value: 60
+      - key: THROTTLE_LIMIT
+        value: 100

@@ -41,6 +41,28 @@ export class MedicalService {
     return this.getPatientRecords(patientId, query);
   }
 
+  async getAllRecords(query: { page?: number; limit?: number; search?: string; type?: RecordType }) {
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const qb = this.recordRepo.createQueryBuilder('r')
+      .leftJoinAndSelect('r.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .leftJoinAndSelect('r.patient', 'patient')
+      .skip(skip).take(limit)
+      .orderBy('r.recordDate', 'DESC')
+      .addOrderBy('r.createdAt', 'DESC');
+
+    if (query.type) qb.andWhere('r.type = :type', { type: query.type });
+    if (query.search) {
+      qb.andWhere('(r.title ILIKE :s OR r.icdCode ILIKE :s OR patient.firstName ILIKE :s OR patient.lastName ILIKE :s)', { s: `%${query.search}%` });
+    }
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
   async findOne(id: string) {
     const record = await this.recordRepo.findOne({ where: { id }, relations: ['doctor', 'doctor.user', 'patient'] });
     if (!record) throw new NotFoundException('Record not found');

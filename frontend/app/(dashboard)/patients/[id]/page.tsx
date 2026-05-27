@@ -1,18 +1,18 @@
 "use client";
-import { use } from "react";
 import { useGetPatientByIdQuery } from "@/store/api/patientsApi";
 import { useGetPatientVitalsQuery } from "@/store/api/vitalsApi";
 import { useGetPatientRecordsQuery } from "@/store/api/medicalApi";
-import { useGetDoctorAppointmentsQuery } from "@/store/api/appointmentsApi";
-import { ArrowLeft, Activity, FileText, Calendar, User } from "lucide-react";
+import { useGetPatientTimelineQuery } from "@/store/api/timelineApi";
+import { ArrowLeft, Activity, FileText } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export default function PatientDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function PatientDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { data: patient, isLoading } = useGetPatientByIdQuery(id);
   const { data: vitalsData } = useGetPatientVitalsQuery({ id, limit: 1 });
   const { data: records } = useGetPatientRecordsQuery({ id, limit: 5 });
+  const { data: timeline = [] } = useGetPatientTimelineQuery(id);
 
   const latest = vitalsData?.data?.[0];
 
@@ -59,7 +59,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           <h3 className="font-semibold flex items-center gap-2 mb-4"><Activity className="w-4 h-4 text-helix-600" /> Latest Vitals</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "Blood Pressure", value: latest.systolicBP && latest.diastolicBP ? `${latest.systolicBP}/${latest.diastolicBP}` : null, unit: "mmHg" },
+              { label: "Blood Pressure", value: latest.bloodPressure, unit: "mmHg" },
               { label: "Heart Rate", value: latest.heartRate, unit: "bpm" },
               { label: "Temperature", value: latest.temperature, unit: "°C" },
               { label: "O₂ Saturation", value: latest.oxygenSaturation, unit: "%" },
@@ -92,6 +92,58 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-4">No records found</p>
+        )}
+      </div>
+
+      {/* Patient Timeline */}
+      <div className="bg-card rounded-xl border shadow-card p-5">
+        <h3 className="font-semibold flex items-center gap-2 mb-4">
+          <Activity className="w-4 h-4 text-helix-600" /> Patient Timeline
+        </h3>
+        {timeline.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">No timeline events</p>
+        ) : (
+          <div className="relative">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+            <div className="space-y-4">
+              {timeline.slice(0, 10).map((item: any, i: number) => {
+                const colors: Record<string, string> = {
+                  appointment: "bg-helix-100 text-helix-700",
+                  record: "bg-purple-100 text-purple-700",
+                  prescription: "bg-health-100 text-health-700",
+                  lab: "bg-amber-100 text-amber-700",
+                  bill: "bg-rose-100 text-rose-700",
+                };
+                const labels: Record<string, string> = {
+                  appointment: "Appointment",
+                  record: "Medical Record",
+                  prescription: "Prescription",
+                  lab: "Lab Order",
+                  bill: "Bill",
+                };
+                return (
+                  <div key={i} className="flex gap-4 pl-9 relative">
+                    <div className={`absolute left-2 top-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold ${colors[item.type] || "bg-muted"}`}>
+                      {item.type?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{labels[item.type] || item.type}</p>
+                      <p className="text-sm font-medium">
+                        {item.type === "appointment" && (item.data?.reason || "Appointment")}
+                        {item.type === "record" && item.data?.title}
+                        {item.type === "prescription" && `Prescription — ${item.data?.items?.length || 0} medication(s)`}
+                        {item.type === "lab" && `Lab Order #${item.data?.orderNumber || item.data?.id?.slice(-6)}`}
+                        {item.type === "bill" && `Bill $${item.data?.totalAmount}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.date ? format(new Date(item.date), "MMM d, yyyy") : "—"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
     </div>

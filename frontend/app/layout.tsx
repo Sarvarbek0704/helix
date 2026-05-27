@@ -5,6 +5,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Helix", template: "%s | Helix" },
   description: "Modern healthcare management system",
+  manifest: "/manifest.json",
+  themeColor: "#0891b2",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Helix",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -3,11 +3,16 @@ import { PrescriptionsService } from './prescriptions.service';
 import { CreatePrescriptionDto, UpdatePrescriptionDto } from './dto/prescription.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { checkInteractions } from './drug-interactions';
 
 @Controller('prescriptions')
 export class PrescriptionsController {
   constructor(private prescriptionsService: PrescriptionsService) {}
   @Post() @Roles('doctor') create(@CurrentUser() u: any, @Body() dto: CreatePrescriptionDto) { return this.prescriptionsService.create(u.id, dto); }
+  @Post('check-interactions') @Roles('doctor', 'nurse', 'admin', 'patient')
+  checkInteractions(@Body() dto: { medications: string[] }) {
+    return { interactions: checkInteractions(dto.medications) };
+  }
   @Get('my') @Roles('patient') getMy(@CurrentUser() u: any, @Query() q: any) { return this.prescriptionsService.getMyPrescriptions(u.id, q); }
   @Get('doctor') @Roles('doctor') getDoctor(@CurrentUser() u: any, @Query() q: any) { return this.prescriptionsService.getDoctorPrescriptions(u.id, q); }
   @Get(':id') findOne(@Param('id') id: string) { return this.prescriptionsService.findOne(id); }

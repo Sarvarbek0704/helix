@@ -1,5 +1,5 @@
 "use client";
-import { FlaskConical, Clock, CheckCircle, ClipboardList } from "lucide-react";
+import { FlaskConical, Clock, CheckCircle, ClipboardList, Bell, Settings } from "lucide-react";
 import { useGetAllOrdersQuery } from "@/store/api/labApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
@@ -71,13 +71,13 @@ export function LabTechDashboard() {
         <h3 className="font-semibold flex items-center gap-2 mb-4"><ClipboardList className="w-4 h-4 text-helix-600" /> Quick Actions</h3>
         <div className="space-y-2">
           {[
-            { href: "/lab", label: "All lab orders", desc: "View and process orders", icon: "🧪" },
-            { href: "/notifications", label: "Notifications", desc: "View alerts and messages", icon: "🔔" },
-            { href: "/settings", label: "Settings", desc: "Update your profile", icon: "⚙️" },
+            { href: "/lab", label: "All lab orders", desc: "View and process orders", icon: FlaskConical },
+            { href: "/notifications", label: "Notifications", desc: "View alerts and messages", icon: Bell },
+            { href: "/settings", label: "Settings", desc: "Update your profile", icon: Settings },
           ].map((item) => (
             <Link key={item.href} href={item.href}
               className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition group">
-              <span className="text-xl">{item.icon}</span>
+              <item.icon className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
                 <p className="text-sm font-medium">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>

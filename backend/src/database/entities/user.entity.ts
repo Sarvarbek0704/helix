@@ -15,6 +15,7 @@ export class User {
   @Column({ nullable: true }) phone: string;
   @Column({ nullable: true }) avatar: string;
   @Column({ default: false }) isEmailVerified: boolean;
+  @Column({ default: false }) isDemo: boolean;
   @Column({ nullable: true, select: false }) otpCode: string;
   @Column({ nullable: true, select: false }) otpExpires: Date;
   @Column({ nullable: true, select: false }) resetToken: string;

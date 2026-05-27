@@ -18,6 +18,18 @@ export const analyticsApi = createApi({
       query: () => "/analytics/doctor",
       providesTags: ["Analytics"],
     }),
+    getRevenueChart: b.query<any[], void>({
+      query: () => "/analytics/revenue-chart",
+      providesTags: ["Analytics"],
+    }),
+    getAppointmentChart: b.query<any[], void>({
+      query: () => "/analytics/appointment-chart",
+      providesTags: ["Analytics"],
+    }),
+    getWorkload: b.query<any[], void>({
+      query: () => "/analytics/workload",
+      providesTags: ["Analytics"],
+    }),
   }),
 });
 
@@ -25,4 +37,7 @@ export const {
   useGetAdminDashboardQuery,
   useGetPatientDashboardQuery,
   useGetDoctorDashboardQuery,
+  useGetRevenueChartQuery,
+  useGetAppointmentChartQuery,
+  useGetWorkloadQuery,
 } = analyticsApi;

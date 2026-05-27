@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { clsx } from "clsx";
 import {
@@ -9,70 +9,76 @@ import {
   Building2, Stethoscope, ChevronLeft, UserCog, Shield,
 } from "lucide-react";
 import { logout } from "@/store/slices/authSlice";
+import { useT } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { RootState } from "@/store";
 
 const NAV = {
   admin: [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/users", icon: UserCog, label: "Users" },
-    { href: "/patients", icon: Users, label: "Patients" },
-    { href: "/doctors", icon: Stethoscope, label: "Doctors" },
-    { href: "/appointments", icon: Calendar, label: "Appointments" },
-    { href: "/departments", icon: Building2, label: "Departments" },
-    { href: "/billing", icon: CreditCard, label: "Billing" },
-    { href: "/insurance", icon: Shield, label: "Insurance" },
-    { href: "/medications", icon: Pill, label: "Medications" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
+    { href: "/users", icon: UserCog, key: "nav.users" },
+    { href: "/patients", icon: Users, key: "nav.patients" },
+    { href: "/doctors", icon: Stethoscope, key: "nav.doctors" },
+    { href: "/appointments", icon: Calendar, key: "nav.appointments" },
+    { href: "/departments", icon: Building2, key: "nav.departments" },
+    { href: "/billing", icon: CreditCard, key: "nav.billing" },
+    { href: "/insurance", icon: Shield, key: "nav.insurance" },
+    { href: "/medications", icon: Pill, key: "nav.medications" },
+    { href: "/users/workload", icon: Activity, key: "nav.workload" },
+    { href: "/notifications", icon: Bell, key: "nav.notifications" },
+    { href: "/settings", icon: Settings, key: "nav.settings" },
+    { href: "/settings/audit", icon: Shield, key: "nav.audit" },
   ],
   patient: [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/appointments", icon: Calendar, label: "Appointments" },
-    { href: "/medical-records", icon: FileText, label: "Medical Records" },
-    { href: "/vitals", icon: Activity, label: "Vitals" },
-    { href: "/prescriptions", icon: Pill, label: "Prescriptions" },
-    { href: "/lab", icon: FlaskConical, label: "Lab Results" },
-    { href: "/billing", icon: CreditCard, label: "Billing" },
-    { href: "/insurance", icon: Shield, label: "Insurance" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
+    { href: "/appointments", icon: Calendar, key: "nav.appointments" },
+    { href: "/medical-records", icon: FileText, key: "nav.medical_records" },
+    { href: "/vitals", icon: Activity, key: "nav.vitals" },
+    { href: "/prescriptions", icon: Pill, key: "nav.prescriptions" },
+    { href: "/lab", icon: FlaskConical, key: "nav.lab_results" },
+    { href: "/billing", icon: CreditCard, key: "nav.billing" },
+    { href: "/insurance", icon: Shield, key: "nav.insurance" },
+    { href: "/notifications", icon: Bell, key: "nav.notifications" },
+    { href: "/settings", icon: Settings, key: "nav.settings" },
   ],
   doctor: [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/patients", icon: Users, label: "Patients" },
-    { href: "/appointments", icon: Calendar, label: "Appointments" },
-    { href: "/medical-records", icon: FileText, label: "Records" },
-    { href: "/prescriptions", icon: Pill, label: "Prescriptions" },
-    { href: "/lab", icon: FlaskConical, label: "Lab Orders" },
-    { href: "/medications", icon: Pill, label: "Medications" },
-    { href: "/schedule", icon: UserCheck, label: "My Schedule" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
+    { href: "/patients", icon: Users, key: "nav.patients" },
+    { href: "/appointments", icon: Calendar, key: "nav.appointments" },
+    { href: "/medical-records", icon: FileText, key: "nav.records" },
+    { href: "/prescriptions", icon: Pill, key: "nav.prescriptions" },
+    { href: "/lab", icon: FlaskConical, key: "nav.lab_orders" },
+    { href: "/medications", icon: Pill, key: "nav.medications" },
+    { href: "/schedule", icon: UserCheck, key: "nav.schedule" },
+    { href: "/notifications", icon: Bell, key: "nav.notifications" },
+    { href: "/settings", icon: Settings, key: "nav.settings" },
   ],
   nurse: [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/patients", icon: Users, label: "Patients" },
-    { href: "/appointments", icon: Calendar, label: "Appointments" },
-    { href: "/vitals", icon: Activity, label: "Record Vitals" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
+    { href: "/patients", icon: Users, key: "nav.patients" },
+    { href: "/appointments", icon: Calendar, key: "nav.appointments" },
+    { href: "/vitals", icon: Activity, key: "nav.record_vitals" },
+    { href: "/notifications", icon: Bell, key: "nav.notifications" },
+    { href: "/settings", icon: Settings, key: "nav.settings" },
   ],
   lab_tech: [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/lab", icon: FlaskConical, label: "Lab Orders" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/dashboard", icon: LayoutDashboard, key: "nav.dashboard" },
+    { href: "/lab", icon: FlaskConical, key: "nav.lab_orders" },
+    { href: "/notifications", icon: Bell, key: "nav.notifications" },
+    { href: "/settings", icon: Settings, key: "nav.settings" },
   ],
 };
 
-interface Props { collapsed: boolean; onToggle: () => void; }
+interface Props { collapsed: boolean; onToggle: () => void; onMobileClose?: () => void; }
 
-export function Sidebar({ collapsed, onToggle }: Props) {
+export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector((s: RootState) => s.auth.user);
   const role = user?.role || "patient";
   const navItems = NAV[role as keyof typeof NAV] || NAV.patient;
+  const { t } = useT();
 
   return (
     <aside className={clsx(
@@ -121,10 +127,11 @@ export function Sidebar({ collapsed, onToggle }: Props) {
       )}
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-hide">
-        {navItems.map(({ href, icon: Icon, label }) => {
+        {navItems.map(({ href, icon: Icon, key }) => {
+          const label = t(key);
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
-            <Link key={href} href={href}
+            <Link key={href} href={href} onClick={onMobileClose}
               className={clsx(
                 "flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition",
                 active ? "bg-helix-50 text-helix-700 font-semibold dark:bg-helix-900/30 dark:text-helix-300"
@@ -138,11 +145,17 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         })}
       </nav>
 
+      {!collapsed && (
+        <div className="px-3 pb-2">
+          <LanguageSwitcher />
+        </div>
+      )}
+
       <div className="p-2 border-t">
-        <button onClick={() => dispatch(logout())}
+        <button onClick={() => { dispatch(logout()); router.push("/login"); }}
           className={clsx("w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition", collapsed && "justify-center")}>
           <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && "Sign out"}
+          {!collapsed && t("nav.signout")}
         </button>
       </div>
     </aside>

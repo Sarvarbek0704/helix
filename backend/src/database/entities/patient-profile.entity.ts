@@ -24,6 +24,7 @@ export class PatientProfile {
   @Column({ nullable: true }) insurancePlanId: string;
   @Column({ nullable: true }) insuranceMemberId: string;
   @Column({ nullable: true, unique: true }) patientNumber: string;
+  @Column({ type: 'simple-array', nullable: true }) favoriteDoctorIds: string[];
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

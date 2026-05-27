@@ -23,6 +23,10 @@ export const medicalApi = createApi({
       query: (params) => ({ url: "/medical-records/my", params }),
       providesTags: ["MedicalRecords"],
     }),
+    getAllRecords: b.query<any, { page?: number; limit?: number; search?: string; type?: string }>({
+      query: (params) => ({ url: "/medical-records/all", params }),
+      providesTags: ["MedicalRecords"],
+    }),
     getPatientRecords: b.query<any, { id: string; page?: number; limit?: number }>({
       query: ({ id, ...params }) => ({ url: `/medical-records/patient/${id}`, params }),
       providesTags: ["MedicalRecords"],
@@ -45,6 +49,7 @@ export const medicalApi = createApi({
 export const {
   useCreateMutation,
   useGetMyRecordsQuery,
+  useGetAllRecordsQuery,
   useGetPatientRecordsQuery,
   useGetByIdQuery,
   useUpdateMutation,

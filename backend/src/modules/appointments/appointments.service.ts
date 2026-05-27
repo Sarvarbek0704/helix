@@ -104,10 +104,11 @@ export class AppointmentsService {
     return this.findAll({ ...query, doctorId: doctor.id });
   }
 
-  async confirm(id: string, doctorUserId: string) {
+  async confirm(id: string, userId: string, userRole: string) {
     const appt = await this.findOne(id);
-    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId }, relations: ['user'] });
-    if (!doctor || appt.doctorId !== doctor.id) throw new ForbiddenException();
+    const isAdmin = userRole === 'admin' || userRole === 'nurse';
+    const doctor = await this.doctorRepo.findOne({ where: { userId }, relations: ['user'] });
+    if (!isAdmin && (!doctor || appt.doctorId !== doctor.id)) throw new ForbiddenException();
     await this.apptRepo.update(id, { status: AppointmentStatus.CONFIRMED });
     const patient = await this.userRepo.findOne({ where: { id: appt.patientId } });
     await this.notifRepo.save(this.notifRepo.create({
@@ -117,31 +118,33 @@ export class AppointmentsService {
       message: `Your appointment on ${appt.appointmentDate} at ${appt.appointmentTime} has been confirmed.`,
     }));
     if (patient) {
-      const doctorName = doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'your doctor';
+      const confirmedDoctor = doctor?.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'your doctor';
       this.mailerService.sendAppointmentConfirmation(patient.email, patient.firstName, {
         date: String(appt.appointmentDate),
         time: String(appt.appointmentTime),
-        doctor: doctorName,
+        doctor: confirmedDoctor,
         type: appt.type,
       }).catch(() => {});
     }
     return this.findOne(id);
   }
 
-  async start(id: string, doctorUserId: string) {
+  async start(id: string, userId: string, userRole: string) {
     const appt = await this.findOne(id);
-    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId } });
-    if (!doctor || appt.doctorId !== doctor.id) throw new ForbiddenException();
+    const isAdmin = userRole === 'admin' || userRole === 'nurse';
+    const doctor = await this.doctorRepo.findOne({ where: { userId } });
+    if (!isAdmin && (!doctor || appt.doctorId !== doctor.id)) throw new ForbiddenException();
     await this.apptRepo.update(id, { status: AppointmentStatus.IN_PROGRESS });
     return this.findOne(id);
   }
 
-  async complete(id: string, doctorUserId: string, dto: DoctorUpdateDto) {
+  async complete(id: string, userId: string, userRole: string, dto: DoctorUpdateDto) {
     const appt = await this.findOne(id);
-    const doctor = await this.doctorRepo.findOne({ where: { userId: doctorUserId } });
-    if (!doctor || appt.doctorId !== doctor.id) throw new ForbiddenException();
+    const isAdmin = userRole === 'admin';
+    const doctor = await this.doctorRepo.findOne({ where: { userId } });
+    if (!isAdmin && (!doctor || appt.doctorId !== doctor.id)) throw new ForbiddenException();
     await this.apptRepo.update(id, { status: AppointmentStatus.COMPLETED, ...dto });
-    await this.doctorRepo.increment({ id: doctor.id }, 'totalAppointments', 1);
+    if (doctor) await this.doctorRepo.increment({ id: doctor.id }, 'totalAppointments', 1);
     return this.findOne(id);
   }
 

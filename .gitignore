@@ -1,13 +1,36 @@
-backend/.env
+# Dependencies
+**/node_modules
 
-backend/node_modules
-
+# Build outputs
 backend/dist
-
-frontend/.env.local
-
-frontend/node_modules
-
-frontend/dist
-
 frontend/.next
+frontend/dist
+frontend/out
+
+# Environment files (NEVER commit these)
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vercel
+.vercel

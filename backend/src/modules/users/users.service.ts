@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindManyOptions } from 'typeorm';
+import { Repository, Like, Or } from 'typeorm';
 import { User, UserRole, UserStatus } from '../../database/entities/user.entity';
 import { UpdateUserDto, AdminUpdateUserDto } from './dto/update-user.dto';
 
@@ -13,10 +13,13 @@ export class UsersService {
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (query.role) where.role = query.role;
-    if (query.status) where.status = query.status;
-    if (query.search) where.email = Like(`%${query.search}%`);
+    const where: any[] = query.search
+      ? [
+          { ...(query.role ? { role: query.role } : {}), ...(query.status ? { status: query.status } : {}), email: Like(`%${query.search}%`) },
+          { ...(query.role ? { role: query.role } : {}), ...(query.status ? { status: query.status } : {}), firstName: Like(`%${query.search}%`) },
+          { ...(query.role ? { role: query.role } : {}), ...(query.status ? { status: query.status } : {}), lastName: Like(`%${query.search}%`) },
+        ]
+      : [{ ...(query.role ? { role: query.role } : {}), ...(query.status ? { status: query.status } : {}) }];
 
     const [data, total] = await this.userRepo.findAndCount({ where, skip, take: limit, order: { createdAt: 'DESC' } });
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };

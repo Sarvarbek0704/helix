@@ -1,5 +1,5 @@
 "use client";
-import { use, useState } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useGetByIdQuery, useConfirmMutation, useStartMutation, useCompleteMutation, useCancelMutation } from "@/store/api/appointmentsApi";
 import { ArrowLeft, Calendar, Clock, User, Loader2, CheckCircle, PlayCircle, XCircle, X } from "lucide-react";
@@ -8,8 +8,8 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import type { RootState } from "@/store";
 
-export default function AppointmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function AppointmentDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const user = useSelector((s: RootState) => s.auth.user);
   const role = user?.role;
   const { data: appt, isLoading } = useGetByIdQuery(id);

@@ -1,12 +1,11 @@
 "use client";
-import { use } from "react";
 import { useGetByIdQuery } from "@/store/api/medicalApi";
 import { ArrowLeft, FileText } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export default function MedicalRecordDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function MedicalRecordDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { data: record, isLoading } = useGetByIdQuery(id);
 
   if (isLoading) return <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>;

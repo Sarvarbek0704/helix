@@ -30,13 +30,15 @@ export class InsuranceService {
   }
 
   async getMyClaims(patientId: string) {
-    return this.claimRepo.find({ where: { patientId }, relations: ['bill', 'insurancePlan'], order: { createdAt: 'DESC' } });
+    const data = await this.claimRepo.find({ where: { patientId }, relations: ['bill', 'insurancePlan'], order: { createdAt: 'DESC' } });
+    return { data, total: data.length };
   }
 
   async getAllClaims(query: any) {
     const where: any = {};
     if (query.status) where.status = query.status;
-    return this.claimRepo.find({ where, relations: ['patient', 'bill', 'insurancePlan'], order: { createdAt: 'DESC' } });
+    const data = await this.claimRepo.find({ where, relations: ['patient', 'bill', 'insurancePlan'], order: { createdAt: 'DESC' } });
+    return { data, total: data.length };
   }
 
   async processClaim(id: string, dto: { status: ClaimStatus; approvedAmount?: number; rejectionReason?: string }) {
