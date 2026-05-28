@@ -2,7 +2,7 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import Cookies from "js-cookie";
 
 const rawBase = fetchBaseQuery({
-  baseUrl: "http://localhost:5002/api",
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5002/api",
   prepareHeaders: (headers) => {
     const token = Cookies.get("accessToken");
     if (token) headers.set("Authorization", `Bearer ${token}`);
